@@ -1,0 +1,22 @@
+{
+  "files": [
+    ".env.example",
+    ".gitignore",
+    "SKILL.md",
+    "VERSION",
+    "mcp.json",
+    "references/design-mcp-contract.md",
+    "references/hr-recruitment-example.md",
+    "references/maintaining.md",
+    "references/platform-templates.md",
+    "references/sales-progressive-explanation.md",
+    "references/v2-asset-authoring.md",
+    "scripts/_integrity.py",
+    "scripts/check_references.py",
+    "scripts/design_api_client.py",
+    "scripts/design_asset_file.py",
+    "scripts/design_mcp_client.py",
+    "scripts/package_skill.py",
+    "workspace/README.md"
+  ]
+}

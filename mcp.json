@@ -1,0 +1,12 @@
+{
+  "name": "wise-design",
+  "transport": "streamable-http",
+  "url_env": "WISECOPILOT_MCP_URL",
+  "authentication": {
+    "mode": "tool-handshake",
+    "tool": "design_authenticate",
+    "username_env": "WISECOPILOT_USERNAME",
+    "password_env": "WISECOPILOT_PASSWORD",
+    "organization_env": "WISECOPILOT_ORG_ID"
+  }
+}
