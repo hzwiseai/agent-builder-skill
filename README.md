@@ -58,6 +58,9 @@ WorkBuddy 的字段与目录约束见
 知识与资产的分流、编译和反向回填见
 [知识与资产变更分流规范](references/knowledge-asset-change-routing.md)。
 
+事实与行为的基础区分见
+[资产中的事实与行为](references/facts-vs-behavior.md)。
+
 平台注册、配置、使用和故障问题的处理边界见
 [平台帮助问题工作流](references/platform-helpdesk-workflow.md)。
 平台注册/登录地址为 <https://crm.wiseai.chat>，帮助文档为
@@ -89,8 +92,8 @@ python3 scripts/package_skill.py --workbuddy --out workspace/dist/wisecopilot-wo
 发布新版本时两处一起改：
 
 ```bash
-echo "0.0.4" > VERSION
-# 同步修改 SKILL.md 的 metadata.version: "0.0.4"
+echo "0.0.5" > VERSION
+# 同步修改 SKILL.md 的 metadata.version: "0.0.5"
 python3 scripts/package_skill.py --workbuddy --out workspace/dist/wisecopilot-workbuddy
 ```
 
