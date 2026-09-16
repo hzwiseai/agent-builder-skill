@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Edit one WorkTool V2 asset as a local file: pull, edit, push.
+"""Edit one V2 platform asset as a local file: pull, edit, push.
 
 ``--pull`` writes ``{"asset": {...identity...}, "document": {...}}`` so any
 editor or agent can change the document offline.  ``--push`` sends that file

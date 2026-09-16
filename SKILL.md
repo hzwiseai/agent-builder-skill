@@ -1,18 +1,18 @@
 ---
 name: wisecopilot
-description: Diagnose, design, and safely author WorkTool V2 business assets, packages, and Agent instances through the WiseCopilot Design MCP service. Use when a user asks to inspect or create a role, reusable task skill, Agent, or talk/reply package in a WorkTool organization.
+description: Diagnose, design, and safely author V2 business assets, packages, and Agent instances for an AI team, AI sales, or AI customer-service platform through the WiseCopilot Design MCP service. Use when a user asks to inspect or create a role, reusable task skill, Agent, or talk/reply package.
 metadata:
   version: "0.0.2"
   display_name: "慧言AI员工训练Skill"
   display_name_en: "WiseCopilot AI Worker Trainer"
-  description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 员工设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到 WorkTool 组织。"
-  description_en: "Diagnose existing configuration and design roles, task skills, reply packages and guardrails for AI workers through the WiseCopilot Design MCP, then apply them to a WorkTool organization with a full audit trail."
+  description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 团队、AI 销售和 AI 客服设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到平台组织。"
+  description_en: "Diagnose existing configuration and design roles, task skills, reply packages and guardrails for AI teams, sales and customer service through the WiseCopilot Design MCP, then apply them to an organization with a full audit trail."
 ---
 
 # WiseCopilot asset designer
 
 Use the WiseCopilot Design MCP service to turn a business requirement into an
-evidence-backed WorkTool V2 asset proposal or a controlled organization change.
+evidence-backed V2 asset proposal or a controlled organization change.
 This skill is portable: it is written for any MCP-capable client, including
 Codex, Claude, and WorkBuddy. Client-specific MCP registration is deliberately
 outside this file; the single endpoint and environment contract are in

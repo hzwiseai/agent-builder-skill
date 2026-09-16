@@ -9,7 +9,7 @@ organization, rather than what their own role does.
 | --- | --- | --- |
 | Who | An organization administrator | A platform administrator |
 | Scope | `scope=org`, owned by one organization | `scope=system`, `sys_*`, shared and read-only to every organization |
-| Tools | The Design MCP, through this skill | The WorkTool repository and its sync script |
+| Tools | The Design MCP, through this skill | The platform repository and its sync script |
 | Blast radius | One organization's conversations | Every organization that materializes it |
 
 The Design MCP refuses a `sys_*` write with

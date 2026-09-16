@@ -1,6 +1,6 @@
 # 慧言AI员工训练Skill（WiseCopilot）
 
-为 WorkTool 组织里的 **AI 员工**设计岗位职责、任务技能、话术与应答边界。
+为 AI 团队、AI 销售和 AI 客服平台中的 **AI 员工**设计岗位职责、任务技能、话术与应答边界。
 
 本 Skill 通过 **WiseCopilot Design MCP** 服务工作：先诊断组织里已有的角色、
 Agent 与话术包，再把业务需求转成有证据支撑的资产方案，最后以可追溯的方式

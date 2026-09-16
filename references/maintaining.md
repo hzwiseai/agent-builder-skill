@@ -45,7 +45,7 @@ releasing for.
 
 ## Packaging
 
-The skill is authored inside the WorkTool repository and installed elsewhere,
+The skill is authored inside the platform repository and installed elsewhere,
 so a release is a package build, not a flag flip on the working copy:
 
 ```bash
