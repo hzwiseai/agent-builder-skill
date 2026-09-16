@@ -52,6 +52,9 @@ WorkBuddy 的字段与目录约束见
 [WorkBuddy Skill 打包规范](references/workbuddy-packaging-spec.md)。打包器会在封存
 前自动补齐并校验顶层展示元数据；校验失败不会生成可发布包。
 
+资产读取、修改和并发冲突处理见
+[资产修改一致性规范](references/asset-concurrency-spec.md)。
+
 ## 打包分发
 
 ```bash

@@ -61,6 +61,12 @@ async def push(path: Path, confirm: bool) -> int:
     asset, document = payload.get("asset") or {}, payload.get("document")
     if not isinstance(document, dict) or not document:
         return _fail("file has no document object; pull it first")
+    # A file round-trip is optimistic-locking by definition. Never allow a
+    # missing baseline to become an unconditional whole-document overwrite.
+    if not asset.get("content_hash"):
+        return _fail("file has no content_hash baseline; pull the current asset again before editing")
+    if not asset.get("asset_kind") or not asset.get("asset_key"):
+        return _fail("file has no asset identity; pull the current asset again before editing")
     prepared = await call_tool("design_prepare_draft_save", {
         "document": document,
         "draft_key": asset.get("draft_key") or "main",

@@ -73,6 +73,8 @@ outside this file; the single endpoint and environment contract are in
    bounded to the returned turns, do not expose it to another organization,
    and summarize rather than reproduce private text.
 
+For any asset edit, follow [the asset concurrency specification](references/asset-concurrency-spec.md). File round-trips must retain the pulled `content_hash`; a missing or stale baseline is an error, never permission to overwrite the current organization draft.
+
 ## Diagnose a live conversation
 
 Evidence alone does not locate a defect. Work the returned runs in this order.
