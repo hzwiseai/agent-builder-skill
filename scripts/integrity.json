@@ -13,13 +13,14 @@
     "references/platform-templates.md": "62f9c372c41120a73be883d2ed4a846097c58819d5a8da159b67ed3fd7d6d1b3",
     "references/sales-progressive-explanation.md": "17218ea816f19b3cc8efe922cbd36ee55a675df4e72990846dc418d774e864d8",
     "references/v2-asset-authoring.md": "5649ba50f1d44a634d17006c3a9bc5d3935f8a3b763a84f45b7854dae50401ac",
+    "references/workbuddy-packaging-spec.md": "e7aefc8b8a290a1cc4e4002f73e7beb0c09a48b5873765c62c864c5ca6e2e5c5",
     "scripts/_integrity.py": "3d71baf6c3d8f1c3de2f25246be2358bb53866db74b05d324e0526b9580fe62f",
     "scripts/check_references.py": "efe7067e0ad8537b3358f3ccbd28aa979da9a1fe65fe74e9dc0bfb8ad41f451c",
     "scripts/design_api_client.py": "8579ab9d515df6b4b565c8646326879ed31bdc2919e8a1ec52e36c4de2d36dfa",
     "scripts/design_asset_file.py": "613ae261b60236373b41b4e84abbafefbe02630874e1d44db3ab716d9b4442e4",
     "scripts/design_mcp_client.py": "60c40165446215eea8b2b457bd689265f201f41bbbbbe442f47a3770e2c40a17",
     "scripts/knowledge_compile_planner.py": "5b6a435a5a82b1ca2a703be8320c5c0452f8da28ad36d2b6a6244f0bb8fee36c",
-    "scripts/package_skill.py": "665fc8a3393582a915050ee70df0ed0d46de05c92b49ae9be275420783ee4467",
+    "scripts/package_skill.py": "b332c83c499f2defea02a64604d5daaf9934650b96196738bc68e0cef3d79c9c",
     "workspace/README.md": "771a47137f91ce9cd940dbf1b272f4237930fb1cb745e2e8fe5456181f9e32ba"
   }
 }

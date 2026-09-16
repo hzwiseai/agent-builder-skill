@@ -48,6 +48,10 @@ URL 取 `WISECOPILOT_MCP_URL` 的值。连接后由 Skill 调用 `design_authent
 **WorkBuddy** —— 上传 `--workbuddy` 模式打出的 ZIP（见下），平台会自动解析
 `SKILL.md` 的 frontmatter 并生成技能。MCP 服务在平台侧配置。
 
+WorkBuddy 的字段与目录约束见
+[WorkBuddy Skill 打包规范](references/workbuddy-packaging-spec.md)。打包器会在封存
+前自动补齐并校验顶层展示元数据；校验失败不会生成可发布包。
+
 ## 打包分发
 
 ```bash
@@ -63,6 +67,7 @@ python3 scripts/package_skill.py --workbuddy --out workspace/dist/wisecopilot-wo
 - `.env` 与 `.session.json` 未被打入（发现即丢弃整个包）
 - `VERSION` 与 `SKILL.md` 的 `metadata.version` 一致（不一致则构建失败）
 - WorkBuddy 模式下路径不超过两层（超限则丢弃）
+- WorkBuddy frontmatter 的必填字段均存在且非空，并与 `VERSION` 一致
 
 ## 版本
 

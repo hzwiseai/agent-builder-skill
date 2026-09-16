@@ -32,6 +32,10 @@ DROPPED_NAMES = {".git", ".venv", "venv", "__pycache__", ".DS_Store", ".pytest_c
 
 # WorkBuddy 只接受 SKILL.md 位于 ZIP 根，且路径最多两层。
 WORKBUDDY_MAX_DEPTH = 2
+WORKBUDDY_REQUIRED_FIELDS = (
+    "name", "description", "display_name", "display_name_en",
+    "description_zh", "description_en", "version", "author",
+)
 
 
 def packaged_frontmatter(content: str, version: str) -> str:
@@ -58,6 +62,24 @@ def packaged_frontmatter(content: str, version: str) -> str:
         if not re.search(rf"^{re.escape(key)}:", frontmatter, re.MULTILINE):
             frontmatter += f"\n{key}: {json.dumps(value, ensure_ascii=False)}"
     return "---\n" + frontmatter + "\n---" + content[match.end():]
+
+
+def validate_packaged_frontmatter(content: str, version: str) -> None:
+    """Fail before sealing if the marketplace-facing manifest is incomplete."""
+    match = re.match(r"\A---\r?\n(.*?)\r?\n---(?=\r?\n|$)", content, re.DOTALL)
+    if not match:
+        raise ValueError("打包后的 SKILL.md 缺少 YAML frontmatter")
+    values: dict[str, str] = {}
+    for line in match.group(1).splitlines():
+        if ":" not in line or line[:1].isspace():
+            continue
+        key, value = line.split(":", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    missing = [key for key in WORKBUDDY_REQUIRED_FIELDS if not values.get(key)]
+    if missing:
+        raise ValueError(f"WorkBuddy frontmatter 缺少必填字段: {', '.join(missing)}")
+    if values["version"] != version:
+        raise ValueError(f"WorkBuddy frontmatter version({values['version']}) 与 VERSION({version}) 不一致")
 
 
 def declared_version() -> str:
@@ -116,7 +138,9 @@ def build(destination: Path, archive: bool, workbuddy: bool = False) -> int:
         target = destination / path.relative_to(SKILL_ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)
         if path.name == "SKILL.md":
-            target.write_text(packaged_frontmatter(path.read_text(encoding="utf-8"), version), encoding="utf-8")
+            rendered = packaged_frontmatter(path.read_text(encoding="utf-8"), version)
+            validate_packaged_frontmatter(rendered, version)
+            target.write_text(rendered, encoding="utf-8")
         else:
             shutil.copy2(path, target)
 
