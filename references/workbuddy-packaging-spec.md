@@ -18,6 +18,9 @@ ZIP 中必须有 `SKILL.md`，并包含 YAML frontmatter。市场解析使用**�
 
 `VERSION` 是唯一版本来源。打包器把它写入市场 frontmatter，并要求非空且一致。
 上传 WorkBuddy 时，新版本必须严格大于平台已发布版本。
+任何功能、提示词、参考文档、脚本或打包规则变更都必须升级版本；禁止用原版本号
+覆盖已发布包。升级前先读取线上当前版本，按 SemVer 增加 patch/minor/major，发布后
+把版本号和 ZIP SHA-256 记录到变更日志。
 
 ## 标准流程
 

@@ -3,7 +3,7 @@
   "stage": "design",
   "files": {
     "SKILL.md": "34554af61410cd1616ff4730f727944f85045fb8a8dbf28869aa7c95335c3de6",
-    "VERSION": "a5dd346546a384362936b97a4c2f5da2d3d253043ea9679aa7b97d89550dfdbd",
+    "VERSION": "4cac276b6ec5d4c71cd96ca2e7b762eb125439adbc8721de5613106d1345fe2d",
     "mcp.json": "e0783ead440d102cab9935b9d788a07056c59c7340a441016f011e3d4f26cd99",
     ".env.example": "8bcf122c4085d7708c6bc45a85c462458144385f23a349406e8ffc110a25b812",
     "requirements.txt": "892a485dedc4c10f61c93b5b0b6af0df8b1a37577af2c80e0795524866068980",
@@ -15,7 +15,7 @@
     "references/platform-templates.md": "68b993876b8c5a92e5d9f1eb89c4d594867b481a4f6ca49d67f924622067c624",
     "references/sales-progressive-explanation.md": "17218ea816f19b3cc8efe922cbd36ee55a675df4e72990846dc418d774e864d8",
     "references/v2-asset-authoring.md": "5649ba50f1d44a634d17006c3a9bc5d3935f8a3b763a84f45b7854dae50401ac",
-    "references/workbuddy-packaging-spec.md": "e7aefc8b8a290a1cc4e4002f73e7beb0c09a48b5873765c62c864c5ca6e2e5c5",
+    "references/workbuddy-packaging-spec.md": "040f6284d69d755ab1a5b76f12cd0fe31bd9b96491ad5596a78c066b730c74ed",
     "scripts/_integrity.py": "3d71baf6c3d8f1c3de2f25246be2358bb53866db74b05d324e0526b9580fe62f",
     "scripts/check_references.py": "efe7067e0ad8537b3358f3ccbd28aa979da9a1fe65fe74e9dc0bfb8ad41f451c",
     "scripts/design_api_client.py": "8579ab9d515df6b4b565c8646326879ed31bdc2919e8a1ec52e36c4de2d36dfa",
