@@ -1,7 +1,7 @@
 ---
 name: wisecopilot
 description: Diagnose, design, and safely author WorkTool V2 business assets, packages, and Agent instances through the WiseCopilot Design MCP service. Use when a user asks to inspect or create a role, reusable task skill, Agent, or talk/reply package in a WorkTool organization.
-version: "0.0.1"
+version: "0.0.2"
 display_name: "慧言AI员工训练Skill"
 display_name_en: "WiseCopilot AI Worker Trainer"
 description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 员工设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到 WorkTool 组织。"
@@ -257,6 +257,93 @@ user, and never touches an Agent's already-bound knowledge and tools.
 5. Create the Agent, then bind its real resources. A freshly materialized
    package has no knowledge or MCP binding: 岗位 defines how the work is done,
    the Agent's resources define what it is done with.
+
+## Run the knowledge center → asset loop
+
+Use this workflow when approved knowledge must become a published organization
+position package. The knowledge center is the business-fact source; the
+installed task/skill is the contract. Do not turn knowledge into runtime code,
+do not edit `sys_*` assets, and do not silently change an Agent binding.
+
+There are two independent releases. A knowledge release makes reviewed content
+available to its bound AI members and supplies a pinned compile input. A
+business-package release makes a separately reviewed asset draft live. The
+second never happens implicitly as a side effect of the first.
+
+1. **Inspect and repair source knowledge.** Call
+   `design_get_knowledge_space`, `design_get_knowledge_publish_overview`, and
+   `design_get_knowledge_compile_input`. Read item-kind templates before
+   authoring. Create or revise source content with
+   `design_prepare_knowledge_item_save` / `design_commit_knowledge_item_save`,
+   then approve each intended revision through
+   `design_prepare_knowledge_review` / `design_commit_knowledge_review`.
+   Keep a source contradiction in the knowledge center: do not hide it in a
+   position policy.
+2. **Publish and activate the knowledge release.** Call
+   `design_prepare_knowledge_publish`; show its approved-item count,
+   destinations, bound AI members, RAG connection choice (if any), and the
+   fact that position assets are not touched. Only after the user confirms,
+   call `design_commit_knowledge_publish`. If the pipeline is asynchronous,
+   re-read `design_get_knowledge_publish_overview` until the release is active
+   or it reports an actionable failure. Never compile from
+   `approved_not_released` when the request is for a released source.
+3. **Lock a declared consumer and generate a local proposal.** Read
+   `design_get_knowledge_compile_input` again. Choose an exact
+   `(agent_instance_key, primary_business_package_key)` from `consumers`; do
+   not infer it from a display name. Use the deterministic local planner:
+
+   ```bash
+   python scripts/knowledge_compile_planner.py --space-id <space_id> --package-key <package_key>
+   ```
+
+   The planner reads the active release and current business package through
+   MCP, then emits reviewable `operations`, `findings`, `change_sets`, source
+   item ids, and `base_document_hashes` without model-token use. It may append
+   business policies and Eval cases when a released knowledge item maps to a
+   business-package field. It must leave new positions, reply-template text,
+   fact/check definitions, resource bindings, and source contradictions as
+   findings for their owners. In this skill, proposal generation belongs to
+   the local planner; MCP remains the read, validation, draft-write, and
+   publish gate.
+4. **Review by responsibility, not by prose similarity.** Each operation must
+   carry the released source item/version and target an allowed V2 field.
+   Existing policy/skill configuration items may be updated only when the
+   server-provided contract allows it. New reply-template text belongs in the
+   reply template package first; new facts, qualifications, capabilities,
+   bindings, and source contradictions remain findings for their actual owner.
+   Do not turn an unresolved finding into an arbitrary policy or Eval.
+5. **Validate before writing when evidence is available.** After the user
+   approves the exact operation list, use the local planner's
+   `--prepare-draft-save` mode to let MCP perform the authoritative schema,
+   scope, stale-baseline, and diff checks before any write. If the Agent or
+   package has no runnable Eval gate for this path, state that clearly and keep
+   the draft-save diff plus release/source receipts as the available evidence.
+6. **Write drafts, then publish separately.** For a local proposal, run:
+
+   ```bash
+   python scripts/knowledge_compile_planner.py --space-id <space_id> --package-key <package_key> --prepare-draft-save
+   ```
+
+   This locally applies the reviewed operations to the current business
+   package document and calls `design_prepare_draft_save`. It returns a
+   confirmation token and exact diff but does not write. After the user reviews
+   the diff and explicitly confirms, call `design_commit_draft_save`. This
+   writes only a draft and never publishes. Read the returned release preview
+   and Agent binding coverage. Then use
+   `design_prepare_business_publish` / `design_commit_business_publish` as a
+   separate publication decision. Check the knowledge publish overview again:
+   the asset update status must advance from `review_ready` or `draft_written`
+   to `published` for the same source release.
+7. **Report the receipts.** Give the user the knowledge `release_key`, the
+   Harness run/session id, changed organization asset keys, candidate/Eval
+   result, business-package published version, remaining findings and whether
+   the position asset status is `published`. A task is only closed when all of
+   those identify the same organization, source release, Agent and package.
+
+The MCP tools use prepare/commit confirmation tokens bound to one Design
+session. A stale token means the release, source, consumer, or draft moved:
+re-read it, regenerate the proposal, and show the new diff. Never retry a
+commit with an old operation list or bypass these tools with a REST write.
 
 ## Optimize a role that has no conversations yet
 

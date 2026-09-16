@@ -1,56 +1,101 @@
-# Agent Builder Skill
+# 慧言AI员工训练Skill（WiseCopilot）
 
-用于 WorkTool V2 的 WiseCopilot 技能，通过 Design MCP 检查和设计岗位、任务技能、业务资产与 Agent 实例。
+为 WorkTool 组织里的 **AI 员工**设计岗位职责、任务技能、话术与应答边界。
 
-仓库名称为 `agent-builder-skill`，技能标识保留为 `wisecopilot`。本仓库只包含客户端技能与辅助脚本，需要连接可用的 WiseCopilot Design MCP 服务。
+本 Skill 通过 **WiseCopilot Design MCP** 服务工作：先诊断组织里已有的角色、
+Agent 与话术包，再把业务需求转成有证据支撑的资产方案，最后以可追溯的方式
+落地。它是可移植的，适用于任何支持 MCP 的客户端——Codex、Claude、WorkBuddy。
 
-## 使用
+## 安装前准备
 
-1. 下载或克隆本仓库，将目录作为技能安装到支持 `SKILL.md` 的客户端。若客户端按技能名组织目录，请使用 `wisecopilot` 作为安装目录名。
-2. 使用 Python 3.10 或更高版本，安装脚本依赖：
+- 一个可登录的 WiseCopilot 账号（用户名 / 密码）
+- Design MCP 服务地址，默认 `https://crm.wiseaio.com/design`
+- Python 3.10+（脚本运行环境）
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   python -m pip install -r requirements.txt
-   cp .env.example .env
-   ```
-
-3. 在本地 `.env` 填写服务地址、账号、密码，以及可选的组织 ID。示例地址需按实际部署修改；组织管理员需要启用 WiseCopilot 外部设计访问。
-4. 按客户端的 MCP 配置方式注册 Streamable HTTP 服务。`mcp.json` 描述连接约定，不是所有客户端都能直接导入的配置文件。
-5. 让客户端读取 [SKILL.md](SKILL.md)，通过 `design_authenticate` 建立会话，再执行组织内的设计任务。
-
-系统资产只读；组织修改遵循技能定义的预览与确认流程。运行时支持的字段与工具以连接服务返回的契约为准。
-
-## 目录
-
-- `SKILL.md`：技能入口与操作流程。
-- `references/`：V2 资产编写与 Design MCP 参考。
-- `scripts/`：MCP 客户端、资产文件操作、完整性校验和打包脚本。
-- `workspace/`：本地运行产物，除说明文件外不提交。
-- `.env.example`：配置示例，不含登录凭据。
-
-## 维护与打包
-
-修改后更新完整性清单：
+如需使用随 Skill 附带的命令行 MCP 客户端，先安装其唯一依赖：
 
 ```bash
-python scripts/_integrity.py --bless
-python scripts/_integrity.py --verify
+python3 -m pip install -r requirements.txt
 ```
 
-配置服务后，可检查文档中的工具名称：
+## 配置
+
+把 `.env.example` 复制为 `.env`，放在 `SKILL.md` 同级目录，填入账号：
 
 ```bash
-python scripts/check_references.py
+cp .env.example .env
 ```
 
-生成带完整性校验的发布包：
+| 变量 | 说明 |
+| --- | --- |
+| `WISECOPILOT_MCP_URL` | Design MCP 服务地址 |
+| `WISECOPILOT_API_BASE_URL` | 只读诊断接口地址（`design_api_client.py` 使用） |
+| `WISECOPILOT_USERNAME` / `WISECOPILOT_PASSWORD` | 登录凭据 |
+| `WISECOPILOT_ORG_ID` | 可选。填写后会话锁定在该组织 |
+
+`.env` 已被 `.gitignore` 忽略，**不要提交，也不要放进任何分发包**。打包脚本会在
+构建后复查，一旦发现凭据文件会直接丢弃整个包。
+
+## 在各客户端注册 MCP
+
+连接契约统一在 `mcp.json`：`streamable-http` 传输，认证走 `design_authenticate`
+工具握手（不是 HTTP Header）。各客户端的注册方式不同：
+
+**Claude / Codex** —— 在客户端的 MCP 配置中新增一个 `streamable-http` 服务，
+URL 取 `WISECOPILOT_MCP_URL` 的值。连接后由 Skill 调用 `design_authenticate`
+完成登录，无需在客户端里配置密码。
+
+**WorkBuddy** —— 上传 `--workbuddy` 模式打出的 ZIP（见下），平台会自动解析
+`SKILL.md` 的 frontmatter 并生成技能。MCP 服务在平台侧配置。
+
+## 打包分发
 
 ```bash
-python scripts/package_skill.py
+# 标准版（顶层带 wisecopilot/ 目录，适用于 Claude、Codex）
+python3 scripts/package_skill.py
+
+# WorkBuddy 版（SKILL.md 位于 ZIP 根，路径最多两层）
+python3 scripts/package_skill.py --workbuddy --out workspace/dist/wisecopilot-workbuddy
 ```
 
-输出位于 `workspace/dist/`。Git 工作目录保持可编辑，发布包副本会封存为 `released`。不要提交 `.env`、`.session.json`、客户对话或运行产物。
+打包会把技能从 `design` 阶段封存为 `released`，并校验：
 
-更多说明见 [维护文档](references/maintaining.md)。
+- `.env` 与 `.session.json` 未被打入（发现即丢弃整个包）
+- `VERSION` 与 `SKILL.md` 的 `metadata.version` 一致（不一致则构建失败）
+- WorkBuddy 模式下路径不超过两层（超限则丢弃）
+
+## 版本
+
+版本的唯一来源是 **`VERSION`** 文件，`SKILL.md` frontmatter 里的 `metadata.version`
+必须与它一致，否则构建失败。
+
+发布新版本时两处一起改：
+
+```bash
+echo "0.0.2" > VERSION
+# 同步修改 SKILL.md 的 metadata.version: "0.0.2"
+python3 scripts/package_skill.py --workbuddy --out workspace/dist/wisecopilot-workbuddy
+```
+
+> WorkBuddy 要求每次上传的版本号**严格大于**平台上的当前版本，重复版本会被拒绝。
+
+## 故障排查
+
+| 现象 | 处理 |
+| --- | --- |
+| 构建报「版本校验失败」 | `VERSION` 与 `SKILL.md` 的 `metadata.version` 不一致，同步后重试 |
+| 构建报「WorkBuddy 目录层级超限」 | 新增了三层路径的文件；WorkBuddy 只接受两层，需调整目录结构 |
+| 构建报「packaged tree contained local configuration」 | `.env` 或 `.session.json` 混入了打包范围，检查 `staged_paths()` 的排除规则 |
+| 完整性校验失败 | 分发包被改动过；重新打包，不要手工编辑已封存的文件 |
+| 认证失败 | 核对 `.env` 中的用户名密码，以及 `WISECOPILOT_MCP_URL` 是否可达 |
+| 工具不存在 | 服务端版本与文档不符，运行 `python3 scripts/check_references.py` 定位 |
+
+## 目录说明
+
+| 路径 | 用途 |
+| --- | --- |
+| `SKILL.md` | 技能定义与工作流程 |
+| `references/` | 资产创作规范、MCP 契约、平台模板与行业示例 |
+| `scripts/` | MCP 客户端、只读诊断、资产文件编辑、打包与完整性工具 |
+| `requirements.txt` | 随附命令行 MCP 客户端所需的 Python 依赖 |
+| `workspace/` | 单次运行的产物目录，不随包分发 |

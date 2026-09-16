@@ -27,7 +27,7 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = SKILL_ROOT / "scripts" / "integrity.json"
 # The shipped surface: identical for every user of the skill. Run artifacts in
 # workspace/ and local configuration are deliberately excluded.
-SHIPPED_GLOBS = ("SKILL.md", "VERSION", "mcp.json", ".env.example", "references/*.md", "scripts/*.py", "workspace/README.md")
+SHIPPED_GLOBS = ("SKILL.md", "VERSION", "mcp.json", ".env.example", "requirements.txt", "references/*.md", "scripts/*.py", "workspace/README.md")
 DESIGN_STAGE = "design"
 RELEASED_STAGE = "released"
 
@@ -43,8 +43,31 @@ def shipped_files() -> list[Path]:
     return [path for path in found if path != MANIFEST]
 
 
+def _skill_md_bytes(data: bytes) -> bytes:
+    """Reduce SKILL.md to the part an installer must leave alone.
+
+    Installers rewrite the frontmatter on install (one replaced ``version`` and
+    the display fields with ``install_method: upload``), so hashing the raw file
+    flags every fresh install as drift and trains people to bless blindly.
+    Only ``name`` and the body define what the skill does; the rest of the
+    frontmatter is catalogue metadata and is left out of the hash.
+    """
+
+    text = data.decode("utf-8")
+    if not text.startswith("---"):
+        return data
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return data
+    name = next((line.strip() for line in parts[1].splitlines() if line.startswith("name:")), "")
+    return f"{name}\n---{parts[2]}".encode("utf-8")
+
+
 def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    data = path.read_bytes()
+    if path == SKILL_ROOT / "SKILL.md":
+        data = _skill_md_bytes(data)
+    return hashlib.sha256(data).hexdigest()
 
 
 def current_manifest() -> dict[str, str]:

@@ -17,6 +17,7 @@ caught.
 from __future__ import annotations
 
 import asyncio
+import argparse
 import json
 from pathlib import Path
 import re
@@ -50,9 +51,28 @@ def documented_tool_names() -> dict[str, set[str]]:
     return found
 
 
+def _local_source_tool_names() -> set[str]:
+    """Read the in-repository MCP registry before the service is deployed."""
+
+    source = SKILL_ROOT.parent / "mcp_servers" / "wise_copilot_design"
+    if not source.exists():
+        raise RuntimeError("local Design MCP source is unavailable")
+    sys.path.insert(0, str(source))
+    from wise_copilot_design_mcp_server import mcp  # noqa: PLC0415
+    return set(mcp._tool_manager._tools)
+
+
 def main() -> int:
-    catalog = asyncio.run(_invoke("", {}, list_tools=True))
-    deployed = {tool["name"] for tool in catalog.get("tools", [])}
+    parser = argparse.ArgumentParser(description="Check documented Design MCP tool names against the deployed catalog or local source.")
+    parser.add_argument("--local-source", action="store_true", help="Validate against mcp_servers/wise_copilot_design before deployment.")
+    args = parser.parse_args()
+    if args.local_source:
+        deployed = _local_source_tool_names()
+        catalog_source = "local_source"
+    else:
+        catalog = asyncio.run(_invoke("", {}, list_tools=True))
+        deployed = {tool["name"] for tool in catalog.get("tools", [])}
+        catalog_source = "deployed"
     if not deployed:
         print(json.dumps({"status": "error", "message": "the service returned no tool catalog"}, ensure_ascii=False), file=sys.stderr)
         return 1
@@ -62,9 +82,9 @@ def main() -> int:
         if names - deployed
     }
     if unknown:
-        print(json.dumps({"status": "unknown_tool_names", "deployed_count": len(deployed), "unknown": unknown}, ensure_ascii=False, indent=2), file=sys.stderr)
+        print(json.dumps({"status": "unknown_tool_names", "catalog_source": catalog_source, "deployed_count": len(deployed), "unknown": unknown}, ensure_ascii=False, indent=2), file=sys.stderr)
         return 1
-    print(json.dumps({"status": "ok", "deployed_count": len(deployed)}, ensure_ascii=False))
+    print(json.dumps({"status": "ok", "catalog_source": catalog_source, "deployed_count": len(deployed)}, ensure_ascii=False))
     return 0
 
 

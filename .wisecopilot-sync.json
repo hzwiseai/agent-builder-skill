@@ -2,9 +2,11 @@
   "files": [
     ".env.example",
     ".gitignore",
+    "README.md",
     "SKILL.md",
     "VERSION",
     "mcp.json",
+    "requirements.txt",
     "references/design-mcp-contract.md",
     "references/hr-recruitment-example.md",
     "references/maintaining.md",
@@ -16,6 +18,7 @@
     "scripts/design_api_client.py",
     "scripts/design_asset_file.py",
     "scripts/design_mcp_client.py",
+    "scripts/knowledge_compile_planner.py",
     "scripts/package_skill.py",
     "workspace/README.md"
   ]

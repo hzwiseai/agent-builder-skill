@@ -43,7 +43,7 @@ def declared_version() -> str:
     frontmatter = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
     declared = next(
         (line.split(":", 1)[1].strip().strip('"') for line in frontmatter.splitlines()
-         if line.startswith("version:")),
+         if line.strip().startswith("version:")),
         None,
     )
     if declared != version:

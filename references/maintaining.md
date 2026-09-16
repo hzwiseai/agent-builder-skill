@@ -22,6 +22,12 @@ file:
 | `python scripts/_integrity.py --release` | Record the files, move to `released`, and set the read-only bit. Used inside a package build; run it on the working copy only for a deliberate local freeze. |
 | `python scripts/_integrity.py --reopen` | Return to `design` and clear the read-only bit for the next round. |
 
+`SKILL.md` is hashed as its `name` line plus its body. The rest of the
+frontmatter is catalogue metadata that installers rewrite (one replaces
+`version` and the display fields with `install_method: upload`), so a fresh
+install verifies as intact instead of teaching people to `--bless` whatever
+they find. Every other shipped file is hashed byte for byte.
+
 None of this is a sandbox. Anything that can edit a script can edit the
 manifest too. It makes a change loud and deliberate, not impossible.
 
