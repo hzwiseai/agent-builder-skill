@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import sys
@@ -47,6 +48,10 @@ async def pull(record_id: int, path: Path, draft_key: str) -> int:
             "pulled_status": asset.get("status"),
         },
         "document": document,
+        "sync": {
+            "baseline_content_hash": asset.get("content_hash"),
+            "pulled_at": datetime.now(timezone.utc).isoformat(),
+        },
     }
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": "pulled", "file": str(path), **payload["asset"]}, ensure_ascii=False, indent=2))
@@ -86,7 +91,23 @@ async def push(path: Path, confirm: bool) -> int:
     committed = await call_tool("design_commit_draft_save", {"confirmation_id": prepared["confirmation_id"]})
     if not committed.get("ok"):
         return _fail("commit refused the change", result=committed)
-    print(json.dumps({"status": "saved", "asset_key": prepared.get("asset_key")}, ensure_ascii=False, indent=2))
+    # Refresh the saved document's hash immediately. The local envelope now
+    # becomes the next round's baseline instead of remaining stale.
+    record_id = asset.get("record_id")
+    refreshed = await call_tool("design_get_asset", {"record_id": int(record_id), "draft_key": asset.get("draft_key") or "main"}) if record_id else {}
+    refreshed_asset = refreshed.get("data") if isinstance(refreshed, dict) else None
+    new_hash = refreshed_asset.get("content_hash") if isinstance(refreshed_asset, dict) else None
+    if new_hash:
+        payload["asset"]["content_hash"] = new_hash
+        payload["asset"]["pulled_status"] = refreshed_asset.get("status")
+        payload["sync"] = {
+            "baseline_content_hash": new_hash,
+            "previous_baseline_content_hash": asset.get("content_hash"),
+            "synced_at": datetime.now(timezone.utc).isoformat(),
+        }
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({"status": "saved", "asset_key": prepared.get("asset_key"),
+                      "new_content_hash": new_hash, "local_baseline_refreshed": bool(new_hash)}, ensure_ascii=False, indent=2))
     return 0
 
 
