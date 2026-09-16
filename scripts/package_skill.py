@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -31,6 +32,32 @@ DROPPED_NAMES = {".git", ".venv", "venv", "__pycache__", ".DS_Store", ".pytest_c
 
 # WorkBuddy 只接受 SKILL.md 位于 ZIP 根，且路径最多两层。
 WORKBUDDY_MAX_DEPTH = 2
+
+
+def packaged_frontmatter(content: str, version: str) -> str:
+    """Expose marketplace metadata as top-level frontmatter fields.
+
+    The authoring copy keeps metadata nested so Codex's skill validator accepts
+    it; the distribution manifest is consumed by a stricter marketplace parser
+    that requires these five fields at the frontmatter root.
+    """
+    match = re.match(r"\A---\r?\n(.*?)\r?\n---(?=\r?\n|$)", content, re.DOTALL)
+    if not match:
+        raise ValueError("SKILL.md must start with YAML frontmatter")
+    frontmatter = match.group(1)
+    fields = {
+        "version": version,
+        "display_name": "慧言AI员工训练Skill",
+        "display_name_en": "WiseCopilot AI Worker Trainer",
+        "description_zh": "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 员工设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到 WorkTool 组织。",
+        "description_en": "Diagnose existing configuration and design roles, task skills, reply packages and guardrails for AI workers through the WiseCopilot Design MCP, then apply them to a WorkTool organization with a full audit trail.",
+        "category": "productivity",
+        "author": "WiseAI",
+    }
+    for key, value in fields.items():
+        if not re.search(rf"^{re.escape(key)}:", frontmatter, re.MULTILINE):
+            frontmatter += f"\n{key}: {json.dumps(value, ensure_ascii=False)}"
+    return "---\n" + frontmatter + "\n---" + content[match.end():]
 
 
 def declared_version() -> str:
@@ -88,7 +115,10 @@ def build(destination: Path, archive: bool, workbuddy: bool = False) -> int:
     for path in shipped:
         target = destination / path.relative_to(SKILL_ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, target)
+        if path.name == "SKILL.md":
+            target.write_text(packaged_frontmatter(path.read_text(encoding="utf-8"), version), encoding="utf-8")
+        else:
+            shutil.copy2(path, target)
 
     sealed = subprocess.run(
         [sys.executable, str(destination / "scripts" / "_integrity.py"), "--release"],

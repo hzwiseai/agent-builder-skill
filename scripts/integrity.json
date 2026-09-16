@@ -19,7 +19,7 @@
     "scripts/design_asset_file.py": "613ae261b60236373b41b4e84abbafefbe02630874e1d44db3ab716d9b4442e4",
     "scripts/design_mcp_client.py": "60c40165446215eea8b2b457bd689265f201f41bbbbbe442f47a3770e2c40a17",
     "scripts/knowledge_compile_planner.py": "5b6a435a5a82b1ca2a703be8320c5c0452f8da28ad36d2b6a6244f0bb8fee36c",
-    "scripts/package_skill.py": "c3476ead95363f9d1755a05a2a663c37b686b80f336220570dcf96a4dae49aee",
+    "scripts/package_skill.py": "665fc8a3393582a915050ee70df0ed0d46de05c92b49ae9be275420783ee4467",
     "workspace/README.md": "771a47137f91ce9cd940dbf1b272f4237930fb1cb745e2e8fe5456181f9e32ba"
   }
 }
