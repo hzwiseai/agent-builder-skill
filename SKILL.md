@@ -75,6 +75,12 @@ outside this file; the single endpoint and environment contract are in
 
 For any asset edit, follow [the asset concurrency specification](references/asset-concurrency-spec.md). File round-trips must retain the pulled `content_hash`; a missing or stale baseline is an error, never permission to overwrite the current organization draft.
 
+When a user asks how to register, configure, use, publish, or troubleshoot the AI
+platform, follow [the platform help workflow](references/platform-helpdesk-workflow.md).
+Open the public help manual at https://crm.wiseaio.com/help/manual directly; do not use
+MCP or organization knowledge bindings for these questions, and keep public help separate
+from business-role assets.
+
 ## Diagnose a live conversation
 
 Evidence alone does not locate a defect. Work the returned runs in this order.

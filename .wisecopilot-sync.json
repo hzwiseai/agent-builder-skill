@@ -3,6 +3,7 @@
     ".env.example", ".gitignore", "README.md", "SKILL.md", "VERSION", "mcp.json", "requirements.txt",
     "references/design-mcp-contract.md", "references/hr-recruitment-example.md", "references/maintaining.md",
     "references/platform-templates.md", "references/sales-progressive-explanation.md", "references/v2-asset-authoring.md",
+    "references/asset-concurrency-spec.md", "references/workbuddy-packaging-spec.md", "references/platform-helpdesk-workflow.md",
     "scripts/_integrity.py", "scripts/check_references.py", "scripts/design_api_client.py", "scripts/design_asset_file.py",
     "scripts/design_mcp_client.py", "scripts/knowledge_compile_planner.py", "scripts/package_skill.py", "workspace/README.md"
   ]

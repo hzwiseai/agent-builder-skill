@@ -54,6 +54,9 @@ WorkBuddy 的字段与目录约束见
 
 资产读取、修改和并发冲突处理见
 [资产修改一致性规范](references/asset-concurrency-spec.md)。
+
+平台注册、配置、使用和故障问题的处理边界见
+[平台帮助问题工作流](references/platform-helpdesk-workflow.md)。
 每次保存成功后，工具会回读线上版本并自动刷新本地基线 hash。
 
 ## 打包分发

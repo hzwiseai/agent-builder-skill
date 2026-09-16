@@ -2,7 +2,7 @@
   "note": "sha256 of the skill's shipped files; regenerate only after reviewing a deliberate change.",
   "stage": "design",
   "files": {
-    "SKILL.md": "f32a43e91d76012a6e1c0a77acc3f57b0fca23406a1abc15c07801ff758c67ba",
+    "SKILL.md": "f8ecf6ac0d62966610db2e8a2b6d3232fdf87bfdb95ff5940beea4d0a8554985",
     "VERSION": "a5dd346546a384362936b97a4c2f5da2d3d253043ea9679aa7b97d89550dfdbd",
     "mcp.json": "e0783ead440d102cab9935b9d788a07056c59c7340a441016f011e3d4f26cd99",
     ".env.example": "8bcf122c4085d7708c6bc45a85c462458144385f23a349406e8ffc110a25b812",
@@ -11,6 +11,7 @@
     "references/design-mcp-contract.md": "146d331473f9204c2fd1a6163468565bf50ab60f4c49b831293b40e9d2a930e7",
     "references/hr-recruitment-example.md": "fe8ebe7a07c7e3e637a2b8efe46f87e2c4e7b4e7ed5aeefa245b8b25dccc5679",
     "references/maintaining.md": "06cc68295b63ac75163399c6db3eb3fd2283b48abd616c900d09034c3ea74df3",
+    "references/platform-helpdesk-workflow.md": "8cc9bad0a2e07de7eb320d06c0a3b0948fb6d8f5a3eb204217e2c48073d2df02",
     "references/platform-templates.md": "68b993876b8c5a92e5d9f1eb89c4d594867b481a4f6ca49d67f924622067c624",
     "references/sales-progressive-explanation.md": "17218ea816f19b3cc8efe922cbd36ee55a675df4e72990846dc418d774e864d8",
     "references/v2-asset-authoring.md": "5649ba50f1d44a634d17006c3a9bc5d3935f8a3b763a84f45b7854dae50401ac",
