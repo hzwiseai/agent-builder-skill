@@ -2,7 +2,7 @@
   "note": "sha256 of the skill's shipped files; regenerate only after reviewing a deliberate change.",
   "stage": "design",
   "files": {
-    "SKILL.md": "ec7f3325a71a0c8fd91e1ac31fcf7a04293e5c6aff6b8bd5453366b54e7037b0",
+    "SKILL.md": "1508a819fc1fb61cbb40abf362543f8bb5e9b63698ccb42f39329b0c4f289e23",
     "VERSION": "a5dd346546a384362936b97a4c2f5da2d3d253043ea9679aa7b97d89550dfdbd",
     "mcp.json": "e0783ead440d102cab9935b9d788a07056c59c7340a441016f011e3d4f26cd99",
     ".env.example": "8bcf122c4085d7708c6bc45a85c462458144385f23a349406e8ffc110a25b812",

@@ -234,11 +234,23 @@ design decision: the role template defines how the Agent works, and the
 knowledge template defines what source content maintainers should provide for
 that role.
 
+When a business user selects a role template, keep the next step in knowledge
+center language. Do not ask them to understand or fill V2 internals such as
+policy keys, fact keys, capability contracts, schema fields, guard names,
+`asset_ref`, or package keys. Use those mappings behind the scenes only to
+match templates, validate coverage, and later compile reviewed knowledge into
+assets. The user-facing output should be a knowledge checklist grouped by the
+selected knowledge template's categories: what each category means in business
+terms, whether it is required, what examples or starter items already exist,
+what information the user still needs to provide, and where they should review
+or publish it in the knowledge center.
+
 1. `design_recommend_system_templates` with the user's requirement, then
    `design_list_system_templates` for the full list. Also call
    `design_list_knowledge_templates` and present the matching knowledge
-   business templates, including their required categories, destinations and
-   asset targets. Match role templates to knowledge templates by the knowledge
+   business templates in business language: template name, role fit,
+   required knowledge categories, and any missing coverage. Match role
+   templates to knowledge templates by the knowledge
    template's `asset_template_refs`: `asset_template_refs.business` must
    include the selected business role template key, or
    `asset_template_refs.task` must include a task template key that the role
@@ -253,7 +265,10 @@ that role.
    read `design_list_knowledge_template_items` for the selected knowledge
    template before promising what source items it seeds, and read
    `design_get_knowledge_item_kind_templates` before authoring any custom
-   item fields. Read the resulting organization copy — including its
+   item fields. Convert those templates into a business-facing intake guide:
+   use labels, descriptions, examples, and required/optional status; hide
+   internal destination and asset mapping unless the user is explicitly doing
+   platform maintenance. Read the resulting organization copy — including its
    `configuration_contract`, which decides where the organization's vocabulary
    goes — after materialization. Do not promise behavior you have not read.
 3. `design_prepare_template_materialize`, show the diff, and only after the
@@ -273,13 +288,15 @@ that role.
    `design_commit_knowledge_space_template`; the `business_pack_key` must be
    the selected knowledge template key, not the role package key. If no
    knowledge template has matching `asset_template_refs`, stop and show the
-   user the missing mapping: maintain or copy a knowledge template first, and
-   set its applicable business/task template refs before creating a space from
-   it. If the user wants the template's starter content, preview and import it with
+   platform/admin-facing missing mapping: maintain or copy a knowledge template
+   first, and set its applicable business/task template refs before creating a
+   space from it. Do not make the business user map role assets manually. If
+   the user wants the template's starter content, preview and import it with
    `design_prepare_knowledge_template_import` /
    `design_commit_knowledge_template_import`. Imported items are draft
-   knowledge: review, publish and activate the knowledge release before an
-   Agent can use it. This step does not write position assets.
+   knowledge: guide the user to complete the required knowledge checklist,
+   review, publish and activate the knowledge release before an Agent can use
+   it. This step does not write position assets.
 5. Customize the organization draft and publish it. A template arrives generic;
    this step is what makes it this organization's role. See below. When the
    materialized package installs `progressive_explanation_skill`, read
