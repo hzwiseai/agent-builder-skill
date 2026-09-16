@@ -77,9 +77,10 @@ For any asset edit, follow [the asset concurrency specification](references/asse
 
 When a user asks how to register, configure, use, publish, or troubleshoot the AI
 platform, follow [the platform help workflow](references/platform-helpdesk-workflow.md).
-Open the public help manual at https://crm.wiseaio.com/help/manual directly; do not use
-MCP or organization knowledge bindings for these questions, and keep public help separate
-from business-role assets.
+Use https://crm.wiseai.chat for registration/login and open the public help manual at
+https://crm.wiseaio.com/help/manual for operating instructions. Do not use MCP or
+organization knowledge bindings for these questions, and keep public help separate from
+business-role assets.
 
 ## Diagnose a live conversation
 
