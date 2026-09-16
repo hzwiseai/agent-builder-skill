@@ -1,11 +1,12 @@
 ---
 name: wisecopilot
 description: Diagnose, design, and safely author WorkTool V2 business assets, packages, and Agent instances through the WiseCopilot Design MCP service. Use when a user asks to inspect or create a role, reusable task skill, Agent, or talk/reply package in a WorkTool organization.
-version: "0.0.2"
-display_name: "慧言AI员工训练Skill"
-display_name_en: "WiseCopilot AI Worker Trainer"
-description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 员工设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到 WorkTool 组织。"
-description_en: "Diagnose existing configuration and design roles, task skills, reply packages and guardrails for AI workers through the WiseCopilot Design MCP, then apply them to a WorkTool organization with a full audit trail."
+metadata:
+  version: "0.0.2"
+  display_name: "慧言AI员工训练Skill"
+  display_name_en: "WiseCopilot AI Worker Trainer"
+  description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 员工设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到 WorkTool 组织。"
+  description_en: "Diagnose existing configuration and design roles, task skills, reply packages and guardrails for AI workers through the WiseCopilot Design MCP, then apply them to a WorkTool organization with a full audit trail."
 ---
 
 # WiseCopilot asset designer
@@ -228,18 +229,33 @@ platform template, not from an empty closure. The console states the pipeline
 as: 平台现成岗位 → 复制成你的草稿 → 自动预检 → 你来发布 → 成员按新版本工作,
 and the boundary as: the assistant only edits drafts, never publishes for the
 user, and never touches an Agent's already-bound knowledge and tools.
+Treat the matching knowledge-center business template as part of the same
+design decision: the role template defines how the Agent works, and the
+knowledge template defines what source content maintainers should provide for
+that role.
 
 1. `design_recommend_system_templates` with the user's requirement, then
-   `design_list_system_templates` for the full list. Present the candidates
-   **and the `gap_reason`**. A stated gap is a real answer: when no template
-   fits, design a closure instead of forcing the nearest one onto the request.
+   `design_list_system_templates` for the full list. Also call
+   `design_list_knowledge_templates` and present the matching knowledge
+   business templates, including their required categories, destinations and
+   asset targets. Match role templates to knowledge templates by the knowledge
+   template's `asset_template_refs`: `asset_template_refs.business` must
+   include the selected business role template key, or
+   `asset_template_refs.task` must include a task template key that the role
+   installs. Name similarity is only a hint for the user, never an automatic
+   match. Present the candidates **and the `gap_reason`**. A stated gap is a
+   real answer: when no role or knowledge template fits, design a closure or a
+   knowledge template instead of forcing the nearest one onto the request.
 2. Read what is actually readable. An organization session can browse system
    **foundation** assets but never a system task or business **composition**,
    so a template's own document is not available before materializing: choose
-   from its `name`, `description`, and `role_template`. Read the resulting
-   organization copy — including its `configuration_contract`, which decides
-   where the organization's vocabulary goes — after materialization. Do not
-   promise behavior you have not read.
+   from its `name`, `description`, and `role_template`. For the knowledge side,
+   read `design_list_knowledge_template_items` for the selected knowledge
+   template before promising what source items it seeds, and read
+   `design_get_knowledge_item_kind_templates` before authoring any custom
+   item fields. Read the resulting organization copy — including its
+   `configuration_contract`, which decides where the organization's vocabulary
+   goes — after materialization. Do not promise behavior you have not read.
 3. `design_prepare_template_materialize`, show the diff, and only after the
    user confirms, `design_commit_template_materialize`.
 
@@ -249,14 +265,32 @@ user, and never touches an Agent's already-bound knowledge and tools.
    the organization gets its own task, package, and default Agent
    configuration, and later differences are maintained in the organization
    draft and republished.
-4. Customize the organization draft and publish it. A template arrives generic;
+4. Create or choose the knowledge space for this role. If no suitable space
+   exists, use `design_prepare_knowledge_space_create` /
+   `design_commit_knowledge_space_create` to create an empty organization
+   knowledge space. Then set its knowledge business template with
+   `design_prepare_knowledge_space_template` /
+   `design_commit_knowledge_space_template`; the `business_pack_key` must be
+   the selected knowledge template key, not the role package key. If no
+   knowledge template has matching `asset_template_refs`, stop and show the
+   user the missing mapping: maintain or copy a knowledge template first, and
+   set its applicable business/task template refs before creating a space from
+   it. If the user wants the template's starter content, preview and import it with
+   `design_prepare_knowledge_template_import` /
+   `design_commit_knowledge_template_import`. Imported items are draft
+   knowledge: review, publish and activate the knowledge release before an
+   Agent can use it. This step does not write position assets.
+5. Customize the organization draft and publish it. A template arrives generic;
    this step is what makes it this organization's role. See below. When the
    materialized package installs `progressive_explanation_skill`, read
    [the progressive explanation skill](references/sales-progressive-explanation.md)
    before filling its configuration.
-5. Create the Agent, then bind its real resources. A freshly materialized
+6. Create the Agent, then bind its real resources. A freshly materialized
    package has no knowledge or MCP binding: 岗位 defines how the work is done,
-   the Agent's resources define what it is done with.
+   the Agent's resources define what it is done with. Bind the Agent to the
+   published knowledge release or resource bindings through the Agent resource
+   tools, then run the knowledge center → asset loop when approved knowledge
+   must update the role's V2 assets.
 
 ## Run the knowledge center → asset loop
 
