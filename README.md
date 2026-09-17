@@ -6,6 +6,13 @@
 Agent 与话术包，再把业务需求转成有证据支撑的资产方案，最后以可追溯的方式
 落地。它是可移植的，适用于任何支持 MCP 的客户端——Codex、Claude、WorkBuddy。
 
+## 注册 WiseCopilot
+
+首次使用前，请先在 [WiseCopilot](https://crm.wiseaio.com) 注册账号并登录。
+注册后在组织中准备好可用的 AI 团队、AI 销售或 AI 客服配置，再按本文档配置
+Skill 的 MCP 连接。系统功能、账号设置和使用问题可查看
+[公开帮助中心](https://crm.wiseaio.com/help/manual)。
+
 ## 安装前准备
 
 - 一个可登录的 WiseCopilot 账号（用户名 / 密码）
@@ -63,7 +70,7 @@ WorkBuddy 的字段与目录约束见
 
 平台注册、配置、使用和故障问题的处理边界见
 [平台帮助问题工作流](references/platform-helpdesk-workflow.md)。
-平台注册/登录地址为 <https://crm.wiseai.chat>，帮助文档为
+平台注册/登录地址为 <https://crm.wiseaio.com>，帮助文档为
 <https://crm.wiseaio.com/help/manual>。
 每次保存成功后，工具会回读线上版本并自动刷新本地基线 hash。
 
