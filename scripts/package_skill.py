@@ -89,6 +89,8 @@ def declared_version() -> str:
     本 skill 有完整性封存，无法在打包时注入 frontmatter，因此只能靠断言防漂移。
     """
     version = (SKILL_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        raise ValueError(f"VERSION 必须是语义版本号（例如 0.1.1），当前为 {version!r}")
     frontmatter = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
     declared = next(
         (line.split(":", 1)[1].strip().strip('"') for line in frontmatter.splitlines()

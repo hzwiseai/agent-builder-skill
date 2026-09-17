@@ -92,8 +92,8 @@ python3 scripts/package_skill.py --workbuddy --out workspace/dist/wisecopilot-wo
 发布新版本时两处一起改：
 
 ```bash
-echo "0.0.5" > VERSION
-# 同步修改 SKILL.md 的 metadata.version: "0.0.5"
+echo "0.1.2" > VERSION
+# 同步修改 SKILL.md 的 metadata.version: "0.0.7"
 python3 scripts/package_skill.py --workbuddy --out workspace/dist/wisecopilot-workbuddy
 ```
 

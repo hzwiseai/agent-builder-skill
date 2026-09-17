@@ -2,7 +2,7 @@
 name: wisecopilot
 description: Diagnose, design, and safely author V2 business assets, packages, and Agent instances for an AI team, AI sales, or AI customer-service platform through the WiseCopilot Design MCP service. Use when a user asks to inspect or create a role, reusable task skill, Agent, or talk/reply package.
 metadata:
-  version: "0.0.5"
+  version: "0.1.2"
   display_name: "慧言AI员工训练Skill"
   display_name_en: "WiseCopilot AI Worker Trainer"
   description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 团队、AI 销售和 AI 客服设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到平台组织。"
@@ -74,6 +74,16 @@ outside this file; the single endpoint and environment contract are in
    and summarize rather than reproduce private text.
 
 For any asset edit, follow [the asset concurrency specification](references/asset-concurrency-spec.md). File round-trips must retain the pulled `content_hash`; a missing or stale baseline is an error, never permission to overwrite the current organization draft.
+
+Before asking a business user to edit an asset, call
+`design_get_asset_edit_contract`. Treat its server-derived operations and
+field ownership as the only editable surface. Translate labels and impact into
+business language; never expose raw V2 paths as the primary form.
+Before restoring or rolling back, call `design_get_asset_version_control` and
+show the target published version, current draft state, and affected Agents.
+Use `design_prepare_asset_version_restore` followed by explicit confirmation and
+`design_commit_asset_version_restore`; a restore only changes the draft and must
+still pass normal review and publish gates.
 
 Before changing either side, classify the request with [the knowledge/asset change routing specification](references/knowledge-asset-change-routing.md). Knowledge is the source of business facts; assets carry behavior. Never assume a knowledge update fixes behavior, and never sync an asset document back into knowledge automatically. Fact-bearing asset changes require a reviewed knowledge backfill proposal.
 
@@ -208,12 +218,13 @@ installation, read
 [the progressive explanation skill](references/sales-progressive-explanation.md)
 before proposing the edit.
 
-### 7. Ask the platform for a second opinion
+### 7. Keep diagnosis local
 
-`design_diagnose_business_package` with the same `conversation_key` forwards the
-turn evidence into the diagnosis. Treat its output as advisory: it reads the
-current package, so it will attribute pre-release turns to the task that
-replaced them. Check its findings against your own segmentation from step 1.
+Do not call a system Copilot diagnosis or generation endpoint. Use the bounded
+runtime/conversation evidence already returned by the Design MCP and make the
+diagnosis locally. The retired `design_diagnose_business_package` tool may be
+present for compatibility, but returns `design_model_generator_disabled` and
+must not be used.
 
 ## What this tool surface cannot tell you
 
@@ -369,6 +380,27 @@ second never happens implicitly as a side effect of the first.
    findings for their owners. In this skill, proposal generation belongs to
    the local planner; MCP remains the read, validation, draft-write, and
    publish gate.
+
+   The compile input also includes deterministic `impact_summary` and
+   per-item `impact` metadata. Use them as routing gates before proposing
+   prose changes:
+
+   - `asset_update`: compare the released source with the referenced asset
+     and include a precise draft diff.
+   - `asset_create`: propose a new allowed entry with a stable lower-case key;
+     do not invent a new fact, qualification, capability, or reply-template
+     owner.
+   - `knowledge_only`: do not manufacture an asset change merely because the
+     text is relevant; verify that the knowledge release is sufficient on its
+     own.
+   - `unclassified`: stop asset authoring and report the category/owner gap.
+
+   Treat `change_kind=fact` and `change_kind=behavior` separately. A
+   behavior change requires impact scope and a regression Eval; a fact change
+   requires a source item/version and, when durable, the corresponding
+   `fact_contract`/record binding. Use
+   `impact_summary.recommended_next_step` only as a workflow hint, never as
+   permission to write or publish.
 4. **Review by responsibility, not by prose similarity.** Each operation must
    carry the released source item/version and target an allowed V2 field.
    Existing policy/skill configuration items may be updated only when the
@@ -396,8 +428,18 @@ second never happens implicitly as a side effect of the first.
    and Agent binding coverage. Then use
    `design_prepare_business_publish` / `design_commit_business_publish` as a
    separate publication decision. Check the knowledge publish overview again:
-   the asset update status must advance from `review_ready` or `draft_written`
-   to `published` for the same source release.
+   then call `design_prepare_local_knowledge_compile_receipt` /
+   `design_commit_local_knowledge_compile_receipt` with the same release,
+   consumer and reviewed operations. This records only the audit link between
+   the local planner and the published package; it does not call a model or
+   modify an asset. Finally re-read the overview: the asset update status must
+   advance from `review_ready` or `draft_written` to `published` for the
+   same source release.
+   If any reviewed operation changes behavior (routing, guards, prompts,
+   capability selection, or task flow), call publish preparation with
+   `behavior_change: true`. The publish preflight then exposes the affected
+   Agents and blocks publication when their declared asset Eval policy is not
+   enabled. Show `publication_impact` to the user before confirmation.
 7. **Report the receipts.** Give the user the knowledge `release_key`, the
    Harness run/session id, changed organization asset keys, candidate/Eval
    result, business-package published version, remaining findings and whether
@@ -570,6 +612,15 @@ document, and show the new diff. Never resend an older document to get past it,
 because a whole-document save silently deletes whatever was added meanwhile.
 
 ## Customer-facing wording
+
+### 两类话术包的生效规则
+
+| 话术包类型 | 可否直接修改 | 正确流程 | 生效时间 |
+| --- | --- | --- | --- |
+| 系统话术包 (`scope=system`) | 不可 | 复制为组织话术包 → 修改组织副本 → 切换岗位引用 → 校验并发布岗位 | 岗位发布后 |
+| 组织话术包 (`scope=org`) | 可以 | 读取当前条目 → 预览差异 → 用户确认 → 提交单条话术修改 | 提交成功后，下一次命中立即生效 |
+
+在请求确认前必须明确告诉用户：组织话术包的单条话术不是岗位草稿，提交后不会等待业务包发布，而是直接影响后续匹配到该话术的生产对话。若用户只想试稿，先复制到独立的组织话术包或使用岗位草稿中的其他行为配置，不要直接修改线上组织话术。
 
 The text a customer actually reads usually comes from a reply template
 package, referenced by the business package's `expression.reply_packages`,
