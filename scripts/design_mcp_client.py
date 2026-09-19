@@ -2,7 +2,8 @@
 """Small, portable WiseCopilot MCP client.
 
 It reads ``wisecopilot/.env``, authenticates with the Design MCP, then lists
-or invokes a tool. Mutating operations still require the MCP's prepare/commit
+or invokes a tool. Authentication prefers ``WISECOPILOT_API_KEY`` and falls back
+to the username and password when no key is configured. Mutating operations still require the MCP's prepare/commit
 confirmation token; this client deliberately cannot bypass that protocol.
 
 A confirmation token is bound to the Design session that issued it, so the
@@ -85,9 +86,14 @@ def _account_fingerprint() -> str:
     previous organization.
     """
 
+    api_key = os.environ.get("WISECOPILOT_API_KEY", "").strip()
     username = os.environ.get("WISECOPILOT_USERNAME", "").strip()
     organization_id = os.environ.get("WISECOPILOT_ORG_ID", "").strip()
-    return hashlib.sha256(f"{username}\n{organization_id}".encode("utf-8")).hexdigest()
+    # The key is hashed, never stored: two keys of the same user still map to
+    # different accounts here, so swapping keys does not inherit a session.
+    return hashlib.sha256(
+        f"{api_key}\n{username}\n{organization_id}".encode("utf-8")
+    ).hexdigest()
 
 
 def cached_session_id() -> str:
@@ -123,14 +129,26 @@ def store_session_id(session_id: str, expires_in_seconds: int) -> None:
         pass
 
 
-async def establish_session(session: ClientSession, *, username: str, password: str, organization_id: str) -> str:
-    auth_args: dict[str, Any] = {"username": username, "password": password}
+async def establish_session(
+    session: ClientSession, *, api_key: str = "", username: str = "", password: str = "",
+    organization_id: str = "",
+) -> str:
+    # Send one credential, not both: the server would accept the key and ignore
+    # the password, and a caller reading the wire should not have to guess which
+    # one actually opened the session.
+    auth_args: dict[str, Any] = {"api_key": api_key} if api_key else {"username": username, "password": password}
     if organization_id:
         auth_args["organization_id"] = organization_id
     authenticated = tool_mapping(await session.call_tool("design_authenticate", auth_args))
     session_id = str(authenticated.get("session_id") or "")
     if not session_id:
-        raise RuntimeError("Design MCP authentication did not return session_id")
+        # The server distinguishes a revoked key from an expired one, from an
+        # account that left the organization, from an organization that turned
+        # external design access off. Dropping that here costs the user a
+        # debugging session to rediscover what the response already said.
+        code = str(authenticated.get("code") or "") or "design_authentication_failed"
+        detail = str(authenticated.get("detail") or "").strip()
+        raise RuntimeError(f"{code}: {detail}" if detail else code)
     store_session_id(session_id, int(authenticated.get("expires_in_seconds") or 0))
     return session_id
 
@@ -141,11 +159,18 @@ async def _invoke(
 ) -> dict[str, Any]:
     load_env(SKILL_ROOT / ".env")
     mcp_url = os.environ.get("WISECOPILOT_MCP_URL", "").strip()
+    api_key = os.environ.get("WISECOPILOT_API_KEY", "").strip()
     username = os.environ.get("WISECOPILOT_USERNAME", "").strip()
     password = os.environ.get("WISECOPILOT_PASSWORD", "")
     organization_id = os.environ.get("WISECOPILOT_ORG_ID", "").strip()
     if not mcp_url:
         raise ValueError("WISECOPILOT_MCP_URL is required in wisecopilot/.env")
+    # A key is preferred over a password because the token it yields is limited
+    # to the design surface; a password login is the fallback, not the default.
+    has_credentials = bool(api_key or (username and password))
+    credentials_error = (
+        "Set WISECOPILOT_API_KEY, or WISECOPILOT_USERNAME and WISECOPILOT_PASSWORD, in wisecopilot/.env"
+    )
 
     async with streamablehttp_client(mcp_url) as (read, write, _):
         async with ClientSession(read, write) as session:
@@ -156,28 +181,34 @@ async def _invoke(
             if not tool_name:
                 raise ValueError("Provide --list-tools or --tool TOOL_NAME")
             if tool_name == "design_authenticate":
-                tool_args.setdefault("username", username)
-                tool_args.setdefault("password", password)
+                if not tool_args.get("api_key") and not (tool_args.get("username") and tool_args.get("password")):
+                    if api_key:
+                        tool_args["api_key"] = api_key
+                    else:
+                        tool_args.setdefault("username", username)
+                        tool_args.setdefault("password", password)
                 if organization_id:
                     tool_args.setdefault("organization_id", organization_id)
-                if not tool_args.get("username") or not tool_args.get("password"):
-                    raise ValueError("WISECOPILOT_USERNAME and WISECOPILOT_PASSWORD are required")
+                if not tool_args.get("api_key") and not (tool_args.get("username") and tool_args.get("password")):
+                    raise ValueError(credentials_error)
                 return tool_mapping(await session.call_tool(tool_name, tool_args))
             if "session_id" in tool_args:
                 return tool_mapping(await session.call_tool(tool_name, tool_args))
             reused = "" if new_session else (session_id or cached_session_id())
-            if not reused and not (username and password):
-                raise ValueError("WISECOPILOT_USERNAME and WISECOPILOT_PASSWORD are required for authenticated tools")
+            if not reused and not has_credentials:
+                raise ValueError(credentials_error)
             tool_args["session_id"] = reused or await establish_session(
-                session, username=username, password=password, organization_id=organization_id,
+                session, api_key=api_key, username=username, password=password,
+                organization_id=organization_id,
             )
             result = tool_mapping(await session.call_tool(tool_name, tool_args))
             if not reused or str(result.get("code") or "") != "design_session_invalid_or_expired":
                 return result
-            if not (username and password):
-                raise ValueError("WISECOPILOT_USERNAME and WISECOPILOT_PASSWORD are required for authenticated tools")
+            if not has_credentials:
+                raise ValueError(credentials_error)
             tool_args["session_id"] = await establish_session(
-                session, username=username, password=password, organization_id=organization_id,
+                session, api_key=api_key, username=username, password=password,
+                organization_id=organization_id,
             )
             return tool_mapping(await session.call_tool(tool_name, tool_args))
 
@@ -198,6 +229,27 @@ async def run(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def _readable_error(exc: BaseException) -> str:
+    """Unwrap the anyio task group that the MCP client runs its stream inside.
+
+    Its ``str`` is always "unhandled errors in a TaskGroup", which says nothing
+    about why the call failed; the cause it wraps is the message worth printing.
+    """
+
+    seen: list[str] = []
+    stack: list[BaseException] = [exc]
+    while stack:
+        current = stack.pop()
+        nested = getattr(current, "exceptions", None)
+        if nested:
+            stack.extend(nested)
+            continue
+        message = str(current).strip()
+        if message and message not in seen:
+            seen.append(message)
+    return "; ".join(seen) or exc.__class__.__name__
+
+
 def main() -> int:
     enforce()
     parser = argparse.ArgumentParser(description="Call the WiseCopilot Design MCP using wisecopilot/.env.")
@@ -210,7 +262,7 @@ def main() -> int:
     try:
         print(json.dumps(asyncio.run(run(args)), ensure_ascii=False, indent=2))
     except Exception as exc:  # CLI boundary: do not include local environment values.
-        print(json.dumps({"status": "error", "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        print(json.dumps({"status": "error", "message": _readable_error(exc)}, ensure_ascii=False), file=sys.stderr)
         return 1
     return 0
 

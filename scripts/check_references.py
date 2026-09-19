@@ -30,7 +30,7 @@ from design_mcp_client import _invoke
 # outcome words that mark a service result code rather than a callable tool.
 _OUTCOME_WORDS = (
     "failed", "stale", "invalid", "expired", "missing", "denied", "empty", "editable",
-    "supported", "found", "enabled", "requires", "not",
+    "supported", "found", "enabled", "requires", "disabled", "not", "rejected",
 )
 NOT_TOOL_NAMES = re.compile(
     r"^design_(prepare|commit)_?$|^design_(mcp|api|asset)_|(^|_)(" + "|".join(_OUTCOME_WORDS) + r")(_|$)"

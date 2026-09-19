@@ -67,22 +67,31 @@ def redact(value: Any) -> Any:
 def main() -> int:
     enforce()
     parser = argparse.ArgumentParser(description="Run a read-only WiseCopilot service API query.")
-    parser.add_argument("--operation", required=True, choices=["platform-contract", "assets", "agents", "package-preview", "asset"])
+    parser.add_argument("--operation", required=True, choices=["organization-identity", "platform-contract", "assets", "agents", "package-preview", "asset"])
     parser.add_argument("--package-key")
     parser.add_argument("--record-id", type=int)
     args = parser.parse_args()
     try:
         load_env(SKILL_ROOT / ".env")
         base_url = os.environ.get("WISECOPILOT_API_BASE_URL", "").strip()
+        api_key = os.environ.get("WISECOPILOT_API_KEY", "").strip()
         username = os.environ.get("WISECOPILOT_USERNAME", "").strip()
         password = os.environ.get("WISECOPILOT_PASSWORD", "")
-        if not base_url or not username or not password:
-            raise ValueError("WISECOPILOT_API_BASE_URL, WISECOPILOT_USERNAME and WISECOPILOT_PASSWORD are required in wisecopilot/.env")
-        login = request_json(base_url, "/api/auth/login", method="POST", payload={"username": username, "password": password})
+        if not base_url:
+            raise ValueError("WISECOPILOT_API_BASE_URL is required in wisecopilot/.env")
+        if not api_key and not (username and password):
+            raise ValueError("Set WISECOPILOT_API_KEY, or WISECOPILOT_USERNAME and WISECOPILOT_PASSWORD, in wisecopilot/.env")
+        # Every path below is inside the design scope's allow list, so an access
+        # key covers this client too and keeps it off a full account token.
+        if api_key:
+            login = request_json(base_url, "/api/auth/wise-copilot/exchange", method="POST", payload={"api_key": api_key})
+        else:
+            login = request_json(base_url, "/api/auth/login", method="POST", payload={"username": username, "password": password})
         token = str((login.get("data") or {}).get("access_token") or login.get("access_token") or "")
         if not token:
             raise RuntimeError("Login response did not contain an access token")
         paths = {
+            "organization-identity": "/api/auth/me",
             "platform-contract": "/api/agents/v2/assets/platform-contracts",
             "assets": "/api/agents/v2/assets/drafts",
             "agents": "/api/agents/v2/agent-instances",

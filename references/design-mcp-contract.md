@@ -10,11 +10,28 @@ https://crm.wiseaio.com/design
 
 It uses MCP streamable HTTP. The tool catalog is listable without a session so
 that a client can register the server, but every tool other than
-`design_authenticate` refuses a call that carries no valid session. That tool accepts the
-locally configured username and password, optionally an organization id, and
-returns a short-lived connection-scoped session. All other tools require that
-session. Passwords are never returned, persisted in assets, or included in
-tool result payloads.
+`design_authenticate` refuses a call that carries no valid session. That tool
+accepts **either** an `api_key` **or** a username and password, optionally an
+organization id, and returns a short-lived connection-scoped session. All other
+tools require that session. Credentials are never returned, persisted in assets,
+or included in tool result payloads.
+
+Prefer `api_key`. An access key is issued per user in the console under
+系统管理 › WiseCopilot 访问, is shown once, carries an expiry (three months by
+default) and can be revoked on its own. The token it exchanges for is
+**scope-limited to the design surface**: it reaches identity lookup and the V2
+asset APIs and nothing else, so a leaked key cannot read customer data, change
+account or organization settings, or issue further keys. A username and
+password exchange for a full account token with none of that narrowing, so use
+one only where no key can be issued.
+
+A key stays bound to the person who issued it — every draft save and publish
+made with it is attributed to them — and it stops working the moment it is
+revoked, expires, its account is disabled, its account leaves the organization,
+or the organization turns external design access off. Those cases come back as
+`design_access_key_rejected` with a `detail` naming which one, or as
+`design_organization_mcp_not_enabled` for the gate. Report the reason; none of
+them is retryable.
 
 This handshake is deliberately client-neutral: Codex, Claude, and WorkBuddy
 need only register the URL named by `mcp.json` and make local `.env` values
@@ -44,6 +61,7 @@ organization scope, evidence version(s), and a machine-readable status.
 | Tool | Access | Purpose |
 | --- | --- | --- |
 | `design_authenticate` | unauthenticated | Establish a short-lived connection-scoped Design session. |
+| `design_get_organization_identity` | read | Return the authenticated account's current user/org identifiers, organization role, creation timestamp, and WiseCopilot feature state. Use before interpreting an empty or unexpected workspace; it intentionally excludes contact fields and credentials. |
 | `design_get_platform_contract` | read | Return the enforced act/dimension/enum values plus an index of the schema registry. The index carries repository paths, not schema bodies. |
 | `design_get_schema` | read | Return one registered schema document by its registry key, with internal `$ref` targets inlined so a versioned shell resolves to the definitions it extends. Field names, required properties and enums come from here. |
 | `design_list_assets` / `design_get_asset` | read | List or inspect authorized V2 drafts and their documents. |
@@ -56,7 +74,7 @@ organization scope, evidence version(s), and a machine-readable status.
 | `design_prepare_template_materialize` / `design_commit_template_materialize` | publish | Create an organization business package from a system template after explicit confirmation. The commit publishes the organization's first release of that package; it does not stage a draft. |
 | `design_prepare_system_task_sync` / `design_commit_system_task_sync` | publish | Replace one organization task with its latest published platform source after explicit confirmation. The prepare shows every organization change the sync would overwrite; the commit overwrites the task document and publishes a new version of it. |
 | `design_list_resource_catalog` | read | List the organization's selectable MCP servers and tools, FAQ libraries, and knowledge documents, so the user can choose what an Agent binds. Credentials are redacted. |
-| `design_get_organization_overview` | read | One orientation call: every organization business package, the Agents running it, each Agent's binding coverage and recent run health, and an `attention` list. Use it to choose a target before diagnosing. |
+| `design_get_organization_overview` | read | One orientation call: every organization business package, the Agents running it, each Agent's binding coverage and recent run health, and an `attention` list. `organization_state: empty` means there is no organization-owned role or Agent to diagnose; confirm identity and choose a template instead of requesting conversation evidence. |
 | `design_list_runtime_runs` | read | Index an Agent's recent runs by status, with each run's release version, delivery status, and decision fallback reason, so a single failed turn can be told apart from a pattern. Message text is never returned. |
 | `design_get_runtime_evidence` / `design_get_conversation_evidence` / `design_list_agents` / `design_get_agent_resources` | read | Read one authorized V2 run, a bounded V2 conversation evidence summary, the Agent-instance list, or one Agent's effective resource requirements and bindings. FAQ direct-reply evidence includes the matched FAQ identity, score, threshold, match mode, and published policy flags, but not a second copy of answer content. Resource credentials are redacted. Conversation message text is omitted by default and is available to an organization-enabled, authenticated MCP session when it requests conversation analysis for its own organization. |
 | `design_list_reply_packages` / `design_list_reply_package_items` | read | List the organization's reply template packages and read their items, including the message body a customer receives. These are not V2 draft assets and do not appear in `design_list_assets`. |
@@ -65,7 +83,11 @@ organization scope, evidence version(s), and a machine-readable status.
 | `design_prepare_knowledge_space_create` / `design_commit_knowledge_space_create` | knowledge setting write | Create one empty organization knowledge-center space after confirmation. It does not select a business template, import template content, publish knowledge, bind an Agent, or write position assets. Use the template-setting and import tools after creation. |
 | `design_get_knowledge_compile_input` | read | Read what a knowledge space contributes to position assets, including per-item fact/behavior routing and impact summary. The local skill planner proposes changes; this tool never invokes a generator. |
 | `design_get_knowledge_publish_overview` | read | Read the approved count, active release, destination pipeline, bound AI members, and release-aware position-asset update status for one knowledge space. |
-| `design_prepare_knowledge_publish` / `design_commit_knowledge_publish` | knowledge release publish | Preview, then create and advance a release from every currently approved revision, run its declared projection/evaluation gates, and activate it when ready. Commit is confirmation-gated and stale when the publish overview moved. It never changes position assets. |
+| `design_prepare_knowledge_publish` / `design_commit_knowledge_publish` | knowledge release publish | Preview, then create a release from every currently approved revision and drive its declared projection/evaluation gates. Binding an AI member is not required. Commit is confirmation-gated and stale when the publish overview moved; it follows the pipeline for a short bounded time and returns the report with `state` and `next_step`. It never changes position assets. |
+| `design_advance_knowledge_publish` | knowledge release publish | Move one started release forward by one stretch (next projection, evaluation, activation) and return the pipeline report. The server progresses a publish only on this call, so keep calling it while `state` is `running`; `retry=true` reruns the failed step of the same release. It never creates a release. |
+| `design_list_knowledge_agent_bindings` | read | List the AI members bound to one knowledge space with status (`pending` staged, `active` consuming `active_release_id`, `disabled` unbound), profile key and live/approved profile versions. No Agent physical resources are returned. |
+| `design_prepare_knowledge_agent_bind` / `design_commit_knowledge_agent_bind` | knowledge consumer write | Stage one organization V2 Agent as a consumer of a knowledge space after explicit confirmation. Prepare refuses an unknown Agent or an existing pending/active binding and is stale when the space's binding list moved. Commit writes only the knowledge-center binding; the member's FAQ/RAG sources change at the next release activation. |
+| `design_prepare_knowledge_agent_unbind` / `design_commit_knowledge_agent_unbind` | knowledge consumer write | Stop one AI member consuming a knowledge space after explicit confirmation. For an `active` binding the commit removes the FAQ library and RAG document that space's release installed on the member, immediately and without a publish. Stale when that binding changed since prepare. |
 | `design_list_knowledge_templates` / `design_list_knowledge_template_items` / `design_get_knowledge_item_kind_templates` | read | Read the business templates (system and organization-owned) with categories, destinations, asset compile targets and `asset_template_refs`; use `asset_template_refs.business/task` as the exact match to applicable role/skill templates. Also read one template's base content and the authoring fields each knowledge kind requires. Build item fields from the kind template, never from memory. |
 | `design_prepare_knowledge_item_save` / `design_commit_knowledge_item_save` | knowledge draft write | Create or revise one knowledge item as a draft revision after explicit confirmation. The commit rejects a changed item. Nothing reaches an Agent until the draft is reviewed and a knowledge release is activated. |
 | `design_prepare_knowledge_review` / `design_commit_knowledge_review` | knowledge review | Approve or reject one item's current draft revision. Approval only makes it eligible for the next release. |

@@ -2,7 +2,7 @@
 name: wisecopilot
 description: Diagnose, design, and safely author V2 business assets, packages, and Agent instances for an AI team, AI sales, or AI customer-service platform through the WiseCopilot Design MCP service. Use when a user asks to inspect or create a role, reusable task skill, Agent, or talk/reply package.
 metadata:
-  version: "0.1.3"
+  version: "0.1.7"
   display_name: "慧言AI员工训练Skill"
   display_name_en: "WiseCopilot AI Worker Trainer"
   description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 团队、AI 销售和 AI 客服设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到平台组织。"
@@ -22,12 +22,29 @@ outside this file; the single endpoint and environment contract are in
 ## Start every session
 
 1. Load local configuration from `.env`; it includes `WISECOPILOT_MCP_URL`
-   and `WISECOPILOT_API_BASE_URL`. Never print, commit, quote, or put
-   the password into a prompt, asset, log, or generated file.
+   and `WISECOPILOT_API_BASE_URL`, plus one credential: either
+   `WISECOPILOT_API_KEY` or a username and password. Never print, commit,
+   quote, or put either credential into a prompt, asset, log, or generated
+   file.
 2. Connect to `WISECOPILOT_MCP_URL` using streamable HTTP. Call
-   `design_authenticate` with the configured username and password before any
-   organization operation. Keep its returned session credential in the MCP
-   connection only. If it returns `design_organization_mcp_not_enabled`, ask
+   `design_authenticate` before any organization operation: pass `api_key`
+   when one is configured, otherwise the username and password. Prefer the
+   key. It returns a token limited to the design surface, so a leaked key
+   cannot reach account settings, customer data, or other Agents, and it can
+   be revoked on its own; a password login returns a full account token.
+   An access key is issued in the console under 系统管理 › WiseCopilot 访问,
+   is shown once, and stops working when it is revoked, when it expires, when
+   the account leaves the organization, or when the organization turns the
+   external design access off. A rejected key returns
+   `design_access_key_rejected` with which of those it was — report that
+   reason instead of retrying. When no credential is configured at all, when a
+   credential is rejected, or when the organization gate is closed, follow
+   [the access and credentials guide](references/access-and-credentials.md):
+   it names what each failure means and what the user has to do. Registration
+   and issuing a credential are the user's own actions in the console at
+   <https://crm.wiseaio.com>; never collect a password, an SMS code, or a
+   captcha in conversation, and never submit a registration on their behalf.
+   Keep its returned session credential in the MCP connection only. If it returns `design_organization_mcp_not_enabled`, ask
    the current organization's administrator to enable WiseCopilot external
    design access in Organization Management; never work around this gate.
    Reuse one Design session for the whole task. A `design_prepare_*`
@@ -58,7 +75,14 @@ outside this file; the single endpoint and environment contract are in
    `design_get_organization_overview`. It returns every business package the
    organization owns (the roles), the Agents running each one, each Agent's
    binding coverage and recent run health, and an `attention` list of concrete
-   findings. Show the user that survey and let them choose; do not pick a
+   findings. When its `organization_state` is `empty`, there is no target and
+   an empty `attention` list is not a health finding: first call
+   `design_get_organization_identity` when the deployed catalog offers it;
+   otherwise use the read-only identity client where script execution is
+   available, or state that identity evidence is unavailable. Report the
+   current account/organization evidence and follow the cold-start routing in
+   [the empty-organization diagnosis guide](references/empty-organization-diagnosis.md).
+   Otherwise show the user that survey and let them choose; do not pick a
    target for them from a single signal, and do not propose a change before
    reading the chosen target's conversation evidence.
 5. For a request to analyze a customer conversation, call
@@ -91,7 +115,7 @@ Use [the facts-versus-behavior guide](references/facts-vs-behavior.md) as the fo
 
 When a user asks how to register, configure, use, publish, or troubleshoot the AI
 platform, follow [the platform help workflow](references/platform-helpdesk-workflow.md).
-Use https://crm.wiseai.chat for registration/login and open the public help manual at
+Use https://crm.wiseaio.com for registration/login and open the public help manual at
 https://crm.wiseaio.com/help/manual for operating instructions. Do not use MCP or
 organization knowledge bindings for these questions, and keep public help separate from
 business-role assets.
@@ -328,10 +352,24 @@ or publish it in the knowledge center.
    before filling its configuration.
 6. Create the Agent, then bind its real resources. A freshly materialized
    package has no knowledge or MCP binding: 岗位 defines how the work is done,
-   the Agent's resources define what it is done with. Bind the Agent to the
-   published knowledge release or resource bindings through the Agent resource
-   tools, then run the knowledge center → asset loop when approved knowledge
-   must update the role's V2 assets.
+   the Agent's resources define what it is done with. Two different tools
+   cover two different layers:
+   - MCP servers, channels and hand-picked FAQ libraries or knowledge
+     documents are Agent resource bindings: `design_list_resource_catalog`,
+     then `design_prepare_agent_resource_update` /
+     `design_commit_agent_resource_update`.
+   - A knowledge-center space is a consumer binding kept by the knowledge
+     center: `design_list_knowledge_agent_bindings`, then
+     `design_prepare_knowledge_agent_bind` /
+     `design_commit_knowledge_agent_bind` (and `..._unbind` to stop). The
+     binding stays `pending` until a knowledge release of that space
+     activates; that activation, not the resource tools, installs the
+     space's FAQ library and RAG document on the Agent and drops any
+     hand-bound ones. Never write a knowledge release's projected sources
+     into `resource_bindings` by hand.
+
+   Then run the knowledge center → asset loop when approved knowledge must
+   update the role's V2 assets.
 
 ## Run the knowledge center → asset loop
 
@@ -357,11 +395,20 @@ second never happens implicitly as a side effect of the first.
 2. **Publish and activate the knowledge release.** Call
    `design_prepare_knowledge_publish`; show its approved-item count,
    destinations, bound AI members, RAG connection choice (if any), and the
-   fact that position assets are not touched. Only after the user confirms,
-   call `design_commit_knowledge_publish`. If the pipeline is asynchronous,
-   re-read `design_get_knowledge_publish_overview` until the release is active
-   or it reports an actionable failure. Never compile from
-   `approved_not_released` when the request is for a released source.
+   fact that position assets are not touched. Binding an AI member is not a
+   precondition: a space with no members still publishes and activates, and
+   a member bound later starts consuming at the next activation. Only after
+   the user confirms, call `design_commit_knowledge_publish`. The server
+   moves a publish forward only when it is advanced; the commit follows the
+   pipeline for a short bounded time, and while the returned `state` is
+   still `running` you must keep calling `design_advance_knowledge_publish`
+   (same `space_id` and `release_id`) every few seconds until it is
+   `active`, `ready` or `failed`. Reading the overview alone never advances
+   it, and a release left `running` blocks the space's next publish. On
+   `failed`, show the failing step and message; after the cause is fixed
+   call `design_advance_knowledge_publish` with `retry=true` rather than
+   publishing again. Never compile from `approved_not_released` when the
+   request is for a released source.
 3. **Lock a declared consumer and generate a local proposal.** Read
    `design_get_knowledge_compile_input` again. Choose an exact
    `(agent_instance_key, primary_business_package_key)` from `consumers`; do
@@ -708,7 +755,7 @@ see [the maintainer guide](references/maintaining.md).
 - Use `scripts/design_api_client.py` only for direct, read-only diagnostic API
   evidence. It obtains its base URL from `WISECOPILOT_API_BASE_URL`; it does
   not implement any write endpoint. Example:
-  `python scripts/design_api_client.py --operation platform-contract`.
+  `python scripts/design_api_client.py --operation organization-identity`.
 - Use `scripts/design_asset_file.py` for the pull/edit/push round trip described
   above. Keep its pulled files under `workspace/`.
 - Do not add a separate write path to any of these scripts. Draft saves,
@@ -764,6 +811,9 @@ instead of following the stale side.
 
 - Read [the Design MCP contract](references/design-mcp-contract.md) when
   connecting, selecting a tool, or designing server-side access controls.
+- Read [the empty-organization diagnosis guide](references/empty-organization-diagnosis.md)
+  when the organization overview returns `organization_state: empty` or the
+  user says the workspace is unexpectedly blank.
 - Read [the V2 authoring guide](references/v2-asset-authoring.md) for an asset
   creation or migration request.
 - Read [the HR recruitment example](references/hr-recruitment-example.md)

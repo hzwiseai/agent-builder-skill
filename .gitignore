@@ -5,3 +5,12 @@ __pycache__/
 # Run artifacts are disposable and never shipped with the skill.
 workspace/*
 !workspace/README.md
+
+# Standalone GitHub checkout
+.env.*
+!.env.example
+.pytest_cache/
+.venv/
+venv/
+*.py[cod]
+.DS_Store

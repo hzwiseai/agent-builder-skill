@@ -6,7 +6,7 @@
 
 平台入口：
 
-- 注册/登录：<https://crm.wiseai.chat>
+- 注册/登录：<https://crm.wiseaio.com>
 - 帮助文档：<https://crm.wiseaio.com/help/manual>
 
 ## 识别与回答

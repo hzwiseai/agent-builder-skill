@@ -27,7 +27,7 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 SKILL_NAME = SKILL_ROOT.name
 # Present in a working checkout, never in a package.
 NEVER_DISTRIBUTE = (".env", ".session.json")
-DROPPED_NAMES = {".git", ".venv", "venv", "__pycache__", ".DS_Store", ".pytest_cache"}
+DROPPED_NAMES = {".git", ".venv", "venv", ".git", ".venv", "venv", "__pycache__", ".DS_Store", ".pytest_cache"}
 
 
 # WorkBuddy 只接受 SKILL.md 位于 ZIP 根，且路径最多两层。
