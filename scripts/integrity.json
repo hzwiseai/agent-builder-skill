@@ -2,13 +2,14 @@
   "note": "sha256 of the skill's shipped files; regenerate only after reviewing a deliberate change.",
   "stage": "design",
   "files": {
-    "SKILL.md": "7e5372ba14880c364eee728a4c2e84c2c9dc90819653acec691c427a0f9858a3",
-    "VERSION": "ba57e7c7f71876d645bcdd9fb070f2dea8e6db5ed284a7e3d85c6b7d2409fef1",
+    "SKILL.md": "5ab31cc0c71fb679d462b587a21de6d1bd7dcc1c6f38e8cc4f463ff534994199",
+    "VERSION": "76f81f64ece28d0bcfe39dd35f6d14f3c87fe000b77aee11561e18d1919f607e",
     "mcp.json": "e0783ead440d102cab9935b9d788a07056c59c7340a441016f011e3d4f26cd99",
     ".env.example": "5ea4f5197d1c89b172bc83face7ffaf990d4eb4a7630bc7121f4f613b5dbae56",
     "requirements.txt": "892a485dedc4c10f61c93b5b0b6af0df8b1a37577af2c80e0795524866068980",
-    "references/access-and-credentials.md": "099d65f1053d95e75579e67e3c92b78c26341ed712873af0b81c1edb86dcee1d",
+    "references/access-and-credentials.md": "3f39bb5f2083ea003bf6dbfda08236d1cc83e49f23528d947dbe9f1a87900144",
     "references/asset-concurrency-spec.md": "8d8301895b73e90c06d3e54e91e6acc0f2f77a95ca3ca088047ca07d9d4761c3",
+    "references/customer-facing-wording.md": "f0793e5f5fa6799d34dde1360c088cd8e778b728a61bb70edde2641f230e923e",
     "references/design-mcp-contract.md": "7a118c201e838aafab1b650c820102deff2af9743f03cda566d5e1ae4eb32d81",
     "references/empty-organization-diagnosis.md": "3006828f2c8e08c897f17159b68457b5e2ec3aef1538f0821b0b99a3361402fd",
     "references/facts-vs-behavior.md": "a674e3c1918143ac57b20add9fb87cf607ac81500c3f6a3b2f9c81c731c97b71",
@@ -26,7 +27,7 @@
     "scripts/design_asset_file.py": "7bf05551f7a84c729adae87d8f7e2569414c5b1fd39c19ae180136a50c2325da",
     "scripts/design_mcp_client.py": "01eb8958b0fdd39e744c356714d1ab02b78359f4be6df0657631a23c38cebbed",
     "scripts/knowledge_compile_planner.py": "5b6a435a5a82b1ca2a703be8320c5c0452f8da28ad36d2b6a6244f0bb8fee36c",
-    "scripts/package_skill.py": "c3861cb30571f65a665573d5504ffcde90549b5be7f76761ab1a45491b7dd0dc",
+    "scripts/package_skill.py": "7514a05ede69445b4b5d526006b13ad8037e1cf57472d4e1ebe9e05a1b4c245e",
     "workspace/README.md": "771a47137f91ce9cd940dbf1b272f4237930fb1cb745e2e8fe5456181f9e32ba"
   }
 }

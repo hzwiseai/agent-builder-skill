@@ -27,7 +27,10 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 SKILL_NAME = SKILL_ROOT.name
 # Present in a working checkout, never in a package.
 NEVER_DISTRIBUTE = (".env", ".session.json")
-DROPPED_NAMES = {".git", ".venv", "venv", ".git", ".venv", "venv", "__pycache__", ".DS_Store", ".pytest_cache"}
+# ``connector`` 是 WorkBuddy 连接器的独立交付物，自带一份面向连接器的
+# SKILL.md 和 references，跟这个技能包是两个东西、两套审核。把它一起打进来
+# 既超出技能包的两层路径限制，也会让市场上出现两份内容不同的 SKILL.md。
+DROPPED_NAMES = {".git", ".venv", "venv", ".git", ".venv", "venv", "__pycache__", ".DS_Store", ".pytest_cache", "connector"}
 
 
 # WorkBuddy 只接受 SKILL.md 位于 ZIP 根，且路径最多两层。
@@ -56,7 +59,9 @@ def packaged_frontmatter(content: str, version: str) -> str:
         "description_zh": "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 团队、AI 销售和 AI 客服设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到平台组织。",
         "description_en": "Diagnose existing configuration and design roles, task skills, reply packages and guardrails for AI teams, sales and customer service through the WiseCopilot Design MCP, then apply them to an organization with a full audit trail.",
         "category": "productivity",
-        "author": "WiseAI",
+        # 与连接器包署名保持一致：同一厂商在同一市场上两个包署不同的名字，
+        # 用户没法确认它们是不是一家的。
+        "author": "杭州慧言互动科技有限公司",
     }
     for key, value in fields.items():
         if not re.search(rf"^{re.escape(key)}:", frontmatter, re.MULTILINE):

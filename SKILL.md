@@ -2,7 +2,7 @@
 name: wisecopilot
 description: Diagnose, design, and safely author V2 business assets, packages, and Agent instances for an AI team, AI sales, or AI customer-service platform through the WiseCopilot Design MCP service. Use when a user asks to inspect or create a role, reusable task skill, Agent, or talk/reply package.
 metadata:
-  version: "0.1.7"
+  version: "0.1.8"
   display_name: "慧言AI员工训练Skill"
   display_name_en: "WiseCopilot AI Worker Trainer"
   description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 团队、AI 销售和 AI 客服设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到平台组织。"
@@ -44,9 +44,19 @@ outside this file; the single endpoint and environment contract are in
    and issuing a credential are the user's own actions in the console at
    <https://crm.wiseaio.com>; never collect a password, an SMS code, or a
    captcha in conversation, and never submit a registration on their behalf.
-   Keep its returned session credential in the MCP connection only. If it returns `design_organization_mcp_not_enabled`, ask
-   the current organization's administrator to enable WiseCopilot external
-   design access in Organization Management; never work around this gate.
+   Keep its returned session credential in the MCP connection only.
+
+   `design_organization_mcp_not_enabled` means the organization has not opened
+   external design access. Do not work around it. There is one supported way
+   through, and it needs the administrator rather than the skill: when the
+   refusal carries an `organization_access_session_id` — it does so only for a
+   password login, never for an access key — call
+   `design_prepare_organization_access_enable` with it, put the returned
+   `effect` and `reversible` to the administrator in their own words, and call
+   `design_commit_organization_access_enable` only once they say yes. That
+   session can do nothing else, so re-authenticate afterwards for a normal one.
+   When the caller is not an organization administrator the prepare says so;
+   the answer is to ask one, not to retry.
    Reuse one Design session for the whole task. A `design_prepare_*`
    confirmation token is bound to the session that issued it, so a prepare and
    its commit must run in the same session or the commit is rejected.
@@ -659,6 +669,20 @@ document, and show the new diff. Never resend an older document to get past it,
 because a whole-document save silently deletes whatever was added meanwhile.
 
 ## Customer-facing wording
+
+Before writing or editing any text a customer will read, read
+[the customer-facing wording guide](references/customer-facing-wording.md). It
+carries the parts that do not depend on which layer the change lands in: the
+seven stages as a review frame, the turn shape (承接 → 信息 → at most one
+question), the objection four-step whose order cannot be swapped, what counts
+as consent, and the delivery checklist.
+
+Two of its rules exist because production broke on them. Tone and length belong
+in `policies`, never in `expression.voice`, which reaches neither the decision
+nor execution. And a sentence carrying a negation or a boundary — 「不便直接
+发送」「不报价」「不承诺时间」 — is exempt from any length limit, because
+compressing away the negation turns a refusal into a promise.
+
 
 ### 两类话术包的生效规则
 

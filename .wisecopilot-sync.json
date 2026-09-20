@@ -7,6 +7,7 @@
     "mcp.json",
     "references/access-and-credentials.md",
     "references/asset-concurrency-spec.md",
+    "references/customer-facing-wording.md",
     "references/design-mcp-contract.md",
     "references/empty-organization-diagnosis.md",
     "references/facts-vs-behavior.md",
