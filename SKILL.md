@@ -2,7 +2,7 @@
 name: wisecopilot
 description: Diagnose, design, and safely author V2 business assets, packages, and Agent instances for an AI team, AI sales, or AI customer-service platform through the WiseCopilot Design MCP service. Use when a user asks to inspect or create a role, reusable task skill, Agent, or talk/reply package.
 metadata:
-  version: "0.1.8"
+  version: "0.1.9"
   display_name: "慧言AI员工训练Skill"
   display_name_en: "WiseCopilot AI Worker Trainer"
   description_zh: "通过 WiseCopilot Design MCP 诊断现有配置，为 AI 团队、AI 销售和 AI 客服设计岗位职责、任务技能、话术与应答边界，并以可追溯的方式落地到平台组织。"
@@ -280,6 +280,16 @@ Say so plainly when you reach one of these, and do not fill the gap by guessing.
   read exists, and none should be attempted.
 
 ## Create a new role
+
+Before choosing a template or deciding what to install, read
+[the role composition patterns](references/role-composition-patterns.md). It
+starts from the one question that decides everything downstream — are you
+asking the customer for a piece of information, or for a yes — and then gives
+the eight shapes a role takes, what each one must fill, and the ways each one
+is usually got wrong. It deliberately does not copy the template catalog:
+`design_list_system_templates` and `design_recommend_system_templates` serve
+that live, and a copied list goes stale as templates are added.
+
 
 A role in this product is a business package; the console calls it 岗位, and the
 Agent instance running it is an AI成员. Creating one normally starts from a

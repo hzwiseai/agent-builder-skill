@@ -2,8 +2,8 @@
   "note": "sha256 of the skill's shipped files; regenerate only after reviewing a deliberate change.",
   "stage": "design",
   "files": {
-    "SKILL.md": "5ab31cc0c71fb679d462b587a21de6d1bd7dcc1c6f38e8cc4f463ff534994199",
-    "VERSION": "76f81f64ece28d0bcfe39dd35f6d14f3c87fe000b77aee11561e18d1919f607e",
+    "SKILL.md": "2dfa8591fbb6d6734b360f36db0ddc779fd75d2ae4ffbad6f903deded0a8904f",
+    "VERSION": "e358d84552808a5c0bd6679d690c283b938ebe15c2bd843c898681d093213107",
     "mcp.json": "e0783ead440d102cab9935b9d788a07056c59c7340a441016f011e3d4f26cd99",
     ".env.example": "5ea4f5197d1c89b172bc83face7ffaf990d4eb4a7630bc7121f4f613b5dbae56",
     "requirements.txt": "892a485dedc4c10f61c93b5b0b6af0df8b1a37577af2c80e0795524866068980",
@@ -18,6 +18,7 @@
     "references/maintaining.md": "06cc68295b63ac75163399c6db3eb3fd2283b48abd616c900d09034c3ea74df3",
     "references/platform-helpdesk-workflow.md": "652e1a3094fe286622952b9b556593352691fee6659026ec01dfb04a7fff5ff9",
     "references/platform-templates.md": "68b993876b8c5a92e5d9f1eb89c4d594867b481a4f6ca49d67f924622067c624",
+    "references/role-composition-patterns.md": "b27fc882153ee194671b60228456affba88fe79fb856f56f0668a4db8a1dd172",
     "references/sales-progressive-explanation.md": "17218ea816f19b3cc8efe922cbd36ee55a675df4e72990846dc418d774e864d8",
     "references/v2-asset-authoring.md": "5649ba50f1d44a634d17006c3a9bc5d3935f8a3b763a84f45b7854dae50401ac",
     "references/workbuddy-packaging-spec.md": "e5ae5fbdfc2d4925de2c0a17d4c2002e3cb555515e15ca974c7bf8cb331de1da",
